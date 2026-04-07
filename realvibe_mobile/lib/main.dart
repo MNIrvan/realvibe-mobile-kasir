@@ -19,6 +19,7 @@ class MyApp extends StatelessWidget {
         textTheme: const TextTheme(
           bodyMedium: TextStyle(color: Color(0xFF362F2D)),
         ),
+        validator: validator,
       ),
       home: const LoginPage(),
     );
