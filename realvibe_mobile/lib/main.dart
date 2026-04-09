@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'login/login_page.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -233,8 +235,10 @@ class DashboardPage extends StatelessWidget {
     );
   }
 }
-      ),
+}
+=======
+      home: const LoginPage(),
     );
   }
-}
+>>>>>>> 5bcfad15d41d5a6abae272bcb25d51eaca016720
 }
