@@ -1,27 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Real-Vibe Login',
-      theme: ThemeData(
-        // Palet warna dasar
-        scaffoldBackgroundColor: const Color(0xFFF9F1EB), // Krem pucat (latar belakang)
-        primaryColor: const Color(0xFF8B4513), // Cokelat (teks utama)
-        useMaterial3: true,
-      ),
-      home: const LoginPage(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
-}
+import '../admin/dashboard_admin.dart';
+import '../kasir/dashboard_kasir.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -31,314 +13,350 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // GlobalKey untuk validasi form
   final _formKey = GlobalKey<FormState>();
-  
-  // Controller untuk mengambil teks
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
+  late TextEditingController _usernameController;
+  late TextEditingController _passwordController;
 
-  // Warna-warna kustom berdasarkan desain
-  final Color _textColor = const Color(0xFF8B4513); // Cokelat Real-Vibe
-  final Color _buttonColor = const Color(0xFFF0C4C1); // Pink pudar tombol
+  @override
+  void initState() {
+    super.initState();
+    _usernameController = TextEditingController();
+    _passwordController = TextEditingController();
+  }
 
   @override
   void dispose() {
-    // Selalu dispose controller untuk menghindari memory leak
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _handleLogin() {
-    // Validasi form sebelum proses
-    if (_formKey.currentState!.validate()) {
-      // Jika valid, lakukan logika login di sini
-      String username = _usernameController.text;
-      String password = _passwordController.text;
-      
-      print('Mencoba login dengan: $username');
-      
-      // Tampilkan notifikasi sederhana
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Mencoba Login sebagai $username...')),
+  Future<void> _handleLogin() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      // Tampilkan loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
+
+      //  API Laravel Anda
+      final String url = 'http://127.0.0.1:8000/api/login';
+      
+      // Gunakan 10.0.2.2 untuk Emulator Android, atau IP asli untuk HP/Web
+      // final String url = 'http://10.0.2.2:8000/api/login';
+
+      try {
+        final response = await http.post(
+          Uri.parse(url),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'username': _usernameController.text,
+            'password': _passwordController.text,
+          }),
+        );
+
+        // Tutup loading dialog
+        Navigator.pop(context);
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+
+          if (data['status'] == 'success') {
+            final role = data['data']?['role']?.toString();
+
+            if (role == 'admin') {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const AdminDashboard()),
+              );
+            } else if (role == 'kasir') {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const RevenueDashboard()),
+              );
+            } else {
+              _showErrorSnackbar('Role tidak dikenali: $role');
+            }
+          } else {
+            _showErrorSnackbar(data['message'] ?? 'Login Gagal');
+          }
+        } else {
+          _showErrorSnackbar('Error Server: ${response.statusCode}');
+        }
+      } catch (e) {
+        Navigator.pop(context); // Tutup loading
+        _showErrorSnackbar('Koneksi Gagal: Periksa internet atau URL API');
+      }
     }
+  }
+
+  void _showErrorSnackbar(String pesan) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(pesan), backgroundColor: Colors.red),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Menggunakan LayoutBuilder agar responsif (misal di web vs mobile)
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 900;
+
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          // Tampilan Desktop/Tablet (Dua Kolom)
-          if (constraints.maxWidth > 800) {
-            return _buildDesktopLayout();
-          } 
-          // Tampilan Mobile (Satu Kolom bertumpuk)
-          else {
-            return _buildMobileLayout();
-          }
-        },
-      ),
-    );
-  }
-
-  // --- Layout Desktop (Dua Kolom) ---
-  Widget _buildDesktopLayout() {
-    return Container(
-      // -- Ganti dengan kode ini jika Anda memiliki gambar latar belakang: --
-      // decoration: const BoxDecoration(
-      //   image: DecorationImage(
-      //     image: AssetImage('assets/bg_pattern.png'), // Pastikan file ada di assets
-      //     fit: BoxFit.cover,
-      //     opacity: 0.5, // Mengatur transparansi pola agar tidak terlalu mencolok
-      //   ),
-      // ),
-      // -----------------------------------------------------------------
-      child: Center(
-        child: SingleChildScrollView( // Agar bisa di-scroll jika layar pendek
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Kolom Kiri: Sambutan dan Logo
-              Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: const EdgeInsets.all(60.0),
-                  child: _buildWelcomeColumn(),
+      backgroundColor: const Color(0xFFFBF3EB),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Center(
+            child: Container(
+              width: isMobile ? double.infinity : 980,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF9F1E8),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(20),
+                    blurRadius: 30,
+                    offset: const Offset(0, 16),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 11,
+                      child: Container(
+                        color: const Color(0xFFF8E8DA),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 32,
+                          horizontal: 32,
+                        ),
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              top: 20,
+                              right: 20,
+                              child: Container(
+                                height: 140,
+                                width: 140,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withAlpha(120),
+                                  borderRadius: BorderRadius.circular(32),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 120,
+                              left: 24,
+                              child: Container(
+                                height: 140,
+                                width: 140,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF0C9B4),
+                                  borderRadius: BorderRadius.circular(32),
+                                ),
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 16),
+                                Center(
+                                  child: Image.asset(
+                                    'assets/icons/icon.png',
+                                    width: 100,
+                                    height: 100,
+                                  ),
+                                ),
+                                const SizedBox(height: 22),
+                                const Center(
+                                  child: Text(
+                                    'Selamat Datang',
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFFBF3023),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'Real Cafe Jatiroto',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF4C2F2A),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                const SizedBox(
+                                  width: 320,
+                                  child: Text(
+                                    'Temukan setiap sudut, setiap cita, dan cerita yang menunggu untuk kamu rasakan.',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      height: 1.7,
+                                      color: Color(0xFF6D4F46),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 9,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 40,
+                          horizontal: isMobile ? 24 : 36,
+                        ),
+                        color: Colors.white,
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 14),
+                              Center(
+                                child: Container(
+                                  height: 90,
+                                  width: 90,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF1E3D8),
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                  child: const Icon(
+                                    Icons.person,
+                                    size: 42,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 28),
+                              const Center(
+                                child: Text(
+                                  'Login Admin',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF221C1A),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              const Center(
+                                child: Text(
+                                  'Silahkan masukkan Username dan Password Anda',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF7B7069),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 28),
+                              _LoginField(
+                                label: 'Username',
+                                hintText: 'Username',
+                                controller: _usernameController,
+                              ),
+                              const SizedBox(height: 16),
+                              _LoginField(
+                                label: 'Password',
+                                hintText: 'Password',
+                                obscureText: true,
+                                controller: _passwordController,
+                              ),
+                              const SizedBox(height: 24),
+                              Center(
+                                child: SizedBox(
+                                  width: 180,
+                                  height: 48,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFD5968D),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
+                                    onPressed: _handleLogin,
+                                    child: const Text(
+                                      'Login',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              
-              // Kolom Kanan: Form Login
-              Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: const EdgeInsets.all(60.0),
-                  child: _buildLoginFormColumn(),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
+}
 
-  // --- Layout Mobile (Satu Kolom) ---
-  Widget _buildMobileLayout() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
-      child: Column(
-        children: [
-          _buildWelcomeColumn(),
-          const SizedBox(height: 50),
-          _buildLoginFormColumn(),
-        ],
-      ),
-    );
-  }
+class _LoginField extends StatelessWidget {
+  const _LoginField({
+    required this.label,
+    required this.hintText,
+    required this.controller,
+    this.obscureText = false,
+  });
 
-  // --- Sub-Widget: Kolom Kiri (Logo & Sambutan) ---
-  Widget _buildWelcomeColumn() {
+  final String label;
+  final String hintText;
+  final TextEditingController controller;
+  final bool obscureText;
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // --- TEMPAT LOGO (RANDOM) ---
-        // Ganti Container ini dengan Image.asset('assets/logo.png') nanti
-        Container(
-          height: 120,
-          width: 200,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: _textColor.withOpacity(0.2)),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.restaurant_menu, size: 50, color: _textColor),
-              const SizedBox(height: 5),
-              Text(
-                "[LOGO ANDA]",
-                style: TextStyle(color: _textColor, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                "(Real-Vibe)",
-                style: TextStyle(color: _textColor, fontSize: 12),
-              ),
-            ],
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF5C4D47),
           ),
         ),
-        // ------------------------------
-
-        const SizedBox(height: 40),
-        
-        // Judul Besar
-        Text(
-          'Selamat Datang',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: _textColor,
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 15),
-        
-        // Deskripsi Kecil
-        Text(
-          'Real Cafe Jatiroto\n'
-          'Temukan setiap sudut, setiap cita,\ndan cerita yang menunggu untuk kamu rasakan.',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: _textColor,
-            fontSize: 14,
-            height: 1.5, // Spasi antar baris
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          obscureText: obscureText,
+          validator: (value) => value == null || value.isEmpty ? '$label tidak boleh kosong' : null,
+          decoration: InputDecoration(
+            hintText: hintText,
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 16,
+              horizontal: 18,
+            ),
+            border: OutlineInputBorder(
+              borderSide: BorderSide.none,
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
         ),
       ],
-    );
-  }
-
-  // --- Sub-Widget: Kolom Kanan (Form Login) ---
-  Widget _buildLoginFormColumn() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Icon User Besar
-          CircleAvatar(
-            radius: 50,
-            backgroundColor: Colors.black12,
-            child: Icon(Icons.person, size: 70, color: _textColor),
-          ),
-          const SizedBox(height: 20),
-          
-          // Judul Form
-          Text(
-            'Login Kasir',
-            style: TextStyle(
-              color: _textColor,
-              fontSize: 26,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 10),
-          
-          // Sub-judul Form
-          Text(
-            'Silahkan masukkan Username dan Password Anda',
-            style: TextStyle(
-              color: _textColor.withOpacity(0.8),
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 30),
-          
-          // Field Username
-          _buildTextField(
-            controller: _usernameController,
-            hintText: 'Username',
-            icon: Icons.person_outline,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Username tidak boleh kosong';
-              }
-              return null;
-            },
-          ),
-          
-          const SizedBox(height: 15),
-          
-          // Field Password
-          _buildTextField(
-            controller: _passwordController,
-            hintText: 'Password',
-            icon: Icons.lock_outline,
-            isPassword: true,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Password tidak boleh kosong';
-              }
-              if (value.length < 6) {
-                return 'Password minimal 6 karakter';
-              }
-              return null;
-            },
-          ),
-          
-          const SizedBox(height: 30),
-          
-          // Tombol Login
-          SizedBox(
-            width: 150, // Lebar tombol disesuaikan
-            height: 50,
-            child: ElevatedButton(
-              onPressed: _handleLogin,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _buttonColor,
-                foregroundColor: _textColor, // Warna teks tombol
-                elevation: 0, // Matikan bayangan agar flat seperti desain
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Login',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- Helper: Widget Pembuat Text Field ---
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hintText,
-    required IconData icon,
-    bool isPassword = false,
-    String? Function(String?)? validator,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          // Sedikit bayangan lembut agar pop-up
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: TextFormField(
-        controller: controller,
-        obscureText: isPassword,
-        style: TextStyle(color: _textColor),
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: TextStyle(color: _textColor.withOpacity(0.5)),
-          prefixIcon: Icon(icon, color: _textColor.withOpacity(0.7)),
-          // Hilangkan border bawaan karena sudah pakai container decoration
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        ),
-        validator: validator,
-      ),
     );
   }
 }
