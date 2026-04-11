@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'login/login_page.dart';
+import 'loading/loading_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
         ),
         validator: validator,
       ),
-      home: const LoginPage(),
+      home: const LoadingPage(),
     );
   }
 }
