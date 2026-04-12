@@ -177,6 +177,27 @@ $cart = session('cart', []);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             overflow: hidden;
         }
+
+        /* STYLE UNTUK TOMBOL WHATSAPP MENGAMBANG */
+        .wa-float-btn {
+            position: fixed;
+            bottom: 100px;
+            left: 25px;
+            background-color: #25d366;
+            color: white;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 2px 5px 15px rgba(0,0,0,0.2);
+            z-index: 2000;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+        .wa-float-btn:hover { color: white; transform: scale(1.1); }
     </style>
 </head>
 <body>
@@ -216,6 +237,10 @@ $cart = session('cart', []);
             </div>
         </div>
     </div>
+
+    <a href="https://wa.me/628123456789" target="_blank" class="wa-float-btn">
+        <i class="fab fa-whatsapp"></i>
+    </a>
 
     <div class="header-custom d-flex justify-content-between align-items-center">
         <div><i class="fas fa-user-circle fa-2x"></i> <span class="ms-2 fw-bold">Welcome, Customer</span></div>
@@ -316,23 +341,22 @@ $cart = session('cart', []);
             </div>
 
         @elseif($page == 'jadwal')
-            <div class="p-3">
-                <h5 class="fw-bold mb-3"><i class="fas fa-train text-danger me-2"></i>Jadwal Keberangkatan</h5>
-                <div class="card card-custom overflow-hidden">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0 table-custom">
-                            <thead>
-                                <tr><th>Kereta</th><th>Tujuan</th><th>Jam</th><th>Status</th></tr>
-                            </thead>
-                            <tbody class="small">
-                                <tr><td>Realvibe Express</td><td>Lumajang</td><td>08:00</td><td><span class="badge bg-success">On Time</span></td></tr>
-                                <tr><td>PSDKU Liner</td><td>Malang</td><td>10:30</td><td><span class="badge bg-success">On Time</span></td></tr>
-                                <tr><td>Mutiara Timur</td><td>Surabaya</td><td>13:45</td><td><span class="badge bg-warning">Delayed</span></td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+            <div class="header-curve" style="background-color: #8B1A1A; height: 280px; border-bottom-left-radius: 50px; border-bottom-right-radius: 50px; padding: 40px 25px; color: white; position: relative;">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <a href="?page=menu" style="background: white; color: #8B1A1A; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <span style="font-weight: 800; font-size: 1.5rem; font-style: italic;">Real-Vibe</span>
+                </div>
+                <h4 class="fw-bold mt-2">Hai, Customer!</h4>
+                <p class="small opacity-75">Yuk cek jadwal kereta, jangan sampai kamu ketinggalan momennya</p>
+            </div>
+            <div style="margin-top: -100px; padding: 0 25px; text-align: center; position: relative; z-index: 5;">
+                <div style="background: white; padding: 10px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: inline-block; width: 100%;">
+                    <img src="{{ asset('/images/jadwal_kereta.png') }}" style="width: 100%; border-radius: 10px;" alt="Jadwal Kereta" onerror="this.src='https://via.placeholder.com/600x800?text=Gambar+Jadwal+Kereta'">
                 </div>
             </div>
+            <div style="margin-top: 20px; text-align: center; opacity: 0.1;"><i class="fas fa-train fa-5x"></i></div>
 
         @elseif($page == 'reservasi')
             <div class="p-3">
@@ -495,7 +519,6 @@ $cart = session('cart', []);
             carousel.cycle(); 
         }
 
-        // FOKUSKAN KURSOR KE INPUT SETELAH AUTO-SUBMIT (BIAR NYAMAN)
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('search')) {
             const input = document.getElementsByName('search')[0];
