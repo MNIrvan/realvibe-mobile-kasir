@@ -169,14 +169,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
-  fl_chart:
-    dependency: "direct main"
-    description:
-      name: fl_chart
-      sha256: "00b74ae680df6b1135bdbea00a7d1fc072a9180b7c3f3702e4b19a9943f5ed7d"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.66.2"
   file_saver:
     dependency: "direct main"
     description:
@@ -217,6 +209,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.3+5"
+  fl_chart:
+    dependency: "direct main"
+    description:
+      name: fl_chart
+      sha256: "00b74ae680df6b1135bdbea00a7d1fc072a9180b7c3f3702e4b19a9943f5ed7d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.66.2"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -274,7 +274,6 @@ packages:
     version: "1.0.2"
   http:
     dependency: "direct main"
-    dependency: transitive
     description:
       name: http
       sha256: "87721a4a50b19c7f1d49001e51409bddc46303966ce89a65af4f4e6004896412"

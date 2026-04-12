@@ -3,6 +3,9 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  connectivity_plus
+  file_saver
+  file_selector_windows
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
