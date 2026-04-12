@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../data/laporan_data.dart';
+import '../../../data/laporan_data.dart';
 import '../../modal/form_laporan_cetak/form_laporan_cetak.dart';
 
 enum LaporanFilter { tunai, nonTunai, uangKeluar, keseluruhan }

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-void main() => runApp(const MaterialApp(home: RevenueDashboard()));
-
 class RevenueDashboard extends StatelessWidget {
   const RevenueDashboard({super.key});
 
@@ -168,8 +166,12 @@ class RevenueDashboard extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        List<String> years = ['2021', '2022', '2023', '2024', '2025'];
-                        return Text(years[value.toInt()]);
+                        const years = ['2021', '2022', '2023', '2024', '2025'];
+                        final index = value.toInt();
+                        if (index >= 0 && index < years.length) {
+                          return Text(years[index]);
+                        }
+                        return const SizedBox.shrink();
                       },
                     ),
                   ),
