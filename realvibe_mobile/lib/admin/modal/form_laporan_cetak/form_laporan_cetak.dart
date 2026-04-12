@@ -4,7 +4,7 @@ import 'package:excel/excel.dart' as ex;
 import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
 
-import '../../data/laporan_data.dart';
+import '../../../data/laporan_data.dart';
 
 class FormLaporanCetak extends StatelessWidget {
   const FormLaporanCetak({
