@@ -3,9 +3,19 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+<<<<<<< HEAD
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
+=======
+  connectivity_plus
+  file_saver
+  file_selector_windows
+)
+
+list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  jni
+>>>>>>> 7c57db720f0eaac1a8d7a2d80c0b0e3db15139c6
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

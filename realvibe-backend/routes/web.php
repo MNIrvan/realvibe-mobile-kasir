@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+<<<<<<< HEAD
 use Illuminate\Http\Request;
 
 function getCommonData($page) {
@@ -76,3 +77,9 @@ Route::get('/jadwal', function () {
 Route::get('/reservasi', function () {
     return view('landing_page', getCommonData('reservasi'));
 });
+=======
+
+Route::get('/', function () {
+    return view('welcome');
+});
+>>>>>>> 7c57db720f0eaac1a8d7a2d80c0b0e3db15139c6
