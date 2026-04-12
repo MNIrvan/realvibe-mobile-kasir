@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../feature/kereta/kereta_page.dart';
+import '../feature/masukan/masukan_page.dart';
+import '../feature/menu/menu_page.dart';
+import '../feature/informasi/informasi_page.dart';
+import '../feature/laporan/laporan_page.dart';
+import '../feature/users/users_page.dart';
+import 'dashboard_section.dart';
 import 'widgets/dashboard_sidebar.dart';
 import 'widgets/revenue_chart.dart';
 
@@ -12,11 +19,34 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   bool isSidebarExpanded = true;
+  DashboardSection selectedSection = DashboardSection.dashboard;
+  final GlobalKey _trendingKey = GlobalKey();
+  double? _trendingHeight;
 
   void toggleSidebar() {
     setState(() {
       isSidebarExpanded = !isSidebarExpanded;
     });
+  }
+
+  void handleSectionSelect(DashboardSection section) {
+    setState(() {
+      selectedSection = section;
+    });
+  }
+
+  void _updateTrendingHeight() {
+    final context = _trendingKey.currentContext;
+    if (context == null) return;
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final newHeight = box.size.height;
+    if (_trendingHeight == null ||
+        (newHeight - _trendingHeight!).abs() > 1) {
+      setState(() {
+        _trendingHeight = newHeight;
+      });
+    }
   }
 
   @override
@@ -25,6 +55,10 @@ class _DashboardPageState extends State<DashboardPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 900;
     final sidebarWidth = isSidebarExpanded ? 260.0 : 80.0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _updateTrendingHeight();
+    });
 
     return Scaffold(
       backgroundColor: const Color(0xFFFCF5ED),
@@ -33,6 +67,8 @@ class _DashboardPageState extends State<DashboardPage> {
               child: DashboardSidebar(
                 isCollapsed: false,
                 onToggle: toggleSidebar,
+                selectedSection: selectedSection,
+                onSelect: handleSectionSelect,
               ),
             )
           : null,
@@ -48,168 +84,19 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: DashboardSidebar(
                   isCollapsed: !isSidebarExpanded,
                   onToggle: toggleSidebar,
+                  selectedSection: selectedSection,
+                  onSelect: handleSectionSelect,
                 ),
               ),
             Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 16 : 24,
-                  vertical: 20,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (isMobile)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.menu,
-                                color: Colors.black87,
-                              ),
-                              onPressed: () =>
-                                  Scaffold.of(context).openDrawer(),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Real-Vibe Admin',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 20,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(13),
-                            blurRadius: 24,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'Welcome Admin !',
-                                  style: theme.textTheme.headlineSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF2A1E1A),
-                                      ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Align(
-                                  alignment: Alignment.centerRight,
-                                  child: SizedBox(
-                                    width: isMobile ? screenWidth * 0.55 : 420,
-                                    child: TextField(
-                                      decoration: InputDecoration(
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                              vertical: 14,
-                                              horizontal: 18,
-                                            ),
-                                        hintText: 'Telusuri disini',
-                                        hintStyle: const TextStyle(
-                                          color: Color(0xFF8A8A8A),
-                                        ),
-                                        prefixIcon: const Icon(
-                                          Icons.search,
-                                          color: Color(0xFF8A8A8A),
-                                        ),
-                                        filled: true,
-                                        fillColor: const Color(0xFFF5F1EE),
-                                        border: OutlineInputBorder(
-                                          borderSide: BorderSide.none,
-                                          borderRadius: BorderRadius.circular(
-                                            14,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Wrap(
-                      runSpacing: 16,
-                      spacing: 16,
-                      children: [
-                        _DashboardMetricCard(
-                          icon: Icons.menu_book,
-                          label: 'Total Menu',
-                          value: '25',
-                          width: isMobile ? double.infinity : 200,
-                        ),
-                        _DashboardMetricCard(
-                          icon: Icons.shopping_cart_outlined,
-                          label: 'Total Penjualan',
-                          value: '450',
-                          width: isMobile ? double.infinity : 200,
-                        ),
-                        _RevenueSummaryCard(
-                          width: isMobile ? double.infinity : 320,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Flex(
-                      direction: isMobile ? Axis.vertical : Axis.horizontal,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Flexible(
-                          flex: 2,
-                          fit: FlexFit.loose,
-                          child: Column(
-                            children: [
-                              _ChartCard(isMobile: isMobile),
-                              const SizedBox(height: 16),
-                              _NotificationCard(isMobile: isMobile),
-                            ],
-                          ),
-                        ),
-                        SizedBox(
-                          width: isMobile ? 0 : 20,
-                          height: isMobile ? 20 : 0,
-                        ),
-                        Flexible(
-                          fit: FlexFit.loose,
-                          child: Column(
-                            children: [
-                              _TrendingCard(isMobile: isMobile),
-                              const SizedBox(height: 16),
-                              _BestSellerCard(isMobile: isMobile),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              child: _DashboardBody(
+                isMobile: isMobile,
+                screenWidth: screenWidth,
+                theme: theme,
+                selectedSection: selectedSection,
+                onOpenDrawer: () => Scaffold.of(context).openDrawer(),
+                trendingKey: _trendingKey,
+                trendingHeight: _trendingHeight,
               ),
             ),
           ],
@@ -219,64 +106,334 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
+class _DashboardBody extends StatelessWidget {
+  const _DashboardBody({
+    required this.isMobile,
+    required this.screenWidth,
+    required this.theme,
+    required this.selectedSection,
+    required this.onOpenDrawer,
+    required this.trendingKey,
+    required this.trendingHeight,
+  });
+
+  final bool isMobile;
+  final double screenWidth;
+  final ThemeData theme;
+  final DashboardSection selectedSection;
+  final VoidCallback onOpenDrawer;
+  final GlobalKey trendingKey;
+  final double? trendingHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    if (selectedSection == DashboardSection.menu) {
+      return MenuPage(isMobile: isMobile);
+    }
+    if (selectedSection == DashboardSection.jadwal) {
+      return KeretaPage(isMobile: isMobile);
+    }
+    if (selectedSection == DashboardSection.informasi) {
+      return InformasiPage(isMobile: isMobile);
+    }
+    if (selectedSection == DashboardSection.masukan) {
+      return MasukanPage(isMobile: isMobile);
+    }
+    if (selectedSection == DashboardSection.laporan) {
+      return LaporanPage(isMobile: isMobile);
+    }
+    if (selectedSection == DashboardSection.users) {
+      return UsersPage(isMobile: isMobile);
+    }
+
+    if (selectedSection != DashboardSection.dashboard) {
+      return _ComingSoonSection(
+        title: _sectionLabel(selectedSection),
+        isMobile: isMobile,
+        onOpenDrawer: onOpenDrawer,
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 24,
+        vertical: 20,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isMobile)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.menu,
+                      color: Colors.black87,
+                    ),
+                    onPressed: onOpenDrawer,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Real-Vibe Admin',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 20,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(13),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Welcome Admin !',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF2A1E1A),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: SizedBox(
+                          width: isMobile ? screenWidth * 0.55 : 420,
+                          child: TextField(
+                            decoration: InputDecoration(
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                                horizontal: 18,
+                              ),
+                              hintText: 'Telusuri disini',
+                              hintStyle: const TextStyle(
+                                color: Color(0xFF8A8A8A),
+                              ),
+                              prefixIcon: const Icon(
+                                Icons.menu,
+                                color: Color(0xFF8A8A8A),
+                              ),
+                              suffixIcon: const Icon(
+                                Icons.search,
+                                color: Color(0xFF8A8A8A),
+                              ),
+                              filled: true,
+                              fillColor: const Color(0xFFF5F1EE),
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide.none,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          _DashboardSummaryPanel(isMobile: isMobile),
+          const SizedBox(height: 24),
+          Flex(
+            direction: isMobile ? Axis.vertical : Axis.horizontal,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Flexible(
+                flex: 2,
+                fit: FlexFit.loose,
+                child: Column(
+                  children: [
+                    _ChartCard(isMobile: isMobile),
+                    const SizedBox(height: 16),
+                    _NotificationCard(isMobile: isMobile),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: isMobile ? 0 : 20,
+                height: isMobile ? 20 : 0,
+              ),
+              Flexible(
+                fit: FlexFit.loose,
+                child: Column(
+                  children: [
+                              _TrendingCard(isMobile: isMobile, key: trendingKey),
+                              const SizedBox(height: 16),
+                              _BestSellerCard(isMobile: isMobile),
+                            ],
+                          ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ComingSoonSection extends StatelessWidget {
+  const _ComingSoonSection({
+    required this.title,
+    required this.isMobile,
+    required this.onOpenDrawer,
+  });
+
+  final String title;
+  final bool isMobile;
+  final VoidCallback onOpenDrawer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 24,
+        vertical: 20,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isMobile)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.menu, color: Colors.black87),
+                    onPressed: onOpenDrawer,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Real-Vibe Admin',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF2A1E1A),
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Halaman ini masih dalam pengembangan.',
+            style: TextStyle(color: Color(0xFF7C6F6A)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _sectionLabel(DashboardSection section) {
+  switch (section) {
+    case DashboardSection.dashboard:
+      return 'Dashboard';
+    case DashboardSection.menu:
+      return 'Menu';
+    case DashboardSection.laporan:
+      return 'Laporan';
+    case DashboardSection.jadwal:
+      return 'Jadwal Kereta';
+    case DashboardSection.informasi:
+      return 'Informasi';
+    case DashboardSection.masukan:
+      return 'Masukan';
+    case DashboardSection.users:
+      return 'Users';
+  }
+}
+
 class _DashboardMetricCard extends StatelessWidget {
   const _DashboardMetricCard({
     required this.icon,
     required this.label,
     required this.value,
-    required this.width,
   });
 
   final IconData icon;
   final String label;
   final String value;
-  final double width;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: width,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
         color: const Color(0xFF8F1A1A),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(20),
-            blurRadius: 18,
+            color: Colors.black.withAlpha(18),
+            blurRadius: 16,
             offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
           Container(
-            height: 42,
-            width: 42,
+            height: 52,
+            width: 52,
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(46),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: Colors.white, size: 22),
+            child: Icon(icon, color: const Color(0xFF8F1A1A), size: 26),
           ),
-          const SizedBox(height: 16),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: Colors.white70,
-            ),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -285,65 +442,44 @@ class _DashboardMetricCard extends StatelessWidget {
 }
 
 class _RevenueSummaryCard extends StatelessWidget {
-  const _RevenueSummaryCard({required this.width});
-
-  final double width;
+  const _RevenueSummaryCard();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: width,
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFF9E2323), width: 1.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF9E2323), width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(10),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
+            color: Colors.black.withAlpha(12),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            height: 46,
-            width: 46,
-            decoration: BoxDecoration(
-              color: const Color(0xFF8F1A1A).withAlpha(31),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(
-              Icons.currency_exchange,
-              color: Color(0xFF8F1A1A),
-              size: 26,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.currency_exchange, color: Color(0xFF8F1A1A), size: 38),
+          SizedBox(height: 8),
+          Text(
+            'Rp. 1.699.000',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF351B1B),
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'Rp. 1.699.000',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF351B1B),
-                  ),
-                ),
-                SizedBox(height: 6),
-                Text(
-                  'Total Pendapatan',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF8B8B8B),
-                  ),
-                ),
-              ],
+          SizedBox(height: 2),
+          Text(
+            'Total Pendapatan',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF8B8B8B),
             ),
           ),
         ],
@@ -351,6 +487,227 @@ class _RevenueSummaryCard extends StatelessWidget {
     );
   }
 }
+
+class _DashboardSummaryPanel extends StatelessWidget {
+  const _DashboardSummaryPanel({required this.isMobile});
+
+  final bool isMobile;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isMobile) {
+      return Column(
+        children: const [
+          _DashboardMetricCard(
+            icon: Icons.menu_book,
+            label: 'Total Menu',
+            value: '25',
+          ),
+          SizedBox(height: 12),
+          _DashboardMetricCard(
+            icon: Icons.shopping_cart_outlined,
+            label: 'Total Penjualan',
+            value: '450',
+          ),
+          SizedBox(height: 12),
+          _RevenueSummaryCard(),
+        ],
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8EFE5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE0C9BC)),
+      ),
+      child: Row(
+        children: const [
+          Expanded(
+            child: _DashboardMetricCard(
+              icon: Icons.menu_book,
+              label: 'Total Menu',
+              value: '25',
+            ),
+          ),
+          SizedBox(width: 20),
+          Expanded(
+            child: _DashboardMetricCard(
+              icon: Icons.shopping_cart_outlined,
+              label: 'Total Penjualan',
+              value: '450',
+            ),
+          ),
+          SizedBox(width: 20),
+          Expanded(child: _RevenueSummaryCard()),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniCalendarCard extends StatelessWidget {
+  const _MiniCalendarCard();
+
+  @override
+  Widget build(BuildContext context) {
+    const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    final now = DateTime.now();
+    final firstDay = DateTime(now.year, now.month, 1);
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    final leadingBlanks = firstDay.weekday % 7;
+    final dates = [
+      ...List<String>.filled(leadingBlanks, ''),
+      ...List<String>.generate(daysInMonth, (i) => '${i + 1}'),
+    ];
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE0D2C8)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(10),
+            blurRadius: 14,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                height: 30,
+                width: 30,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3E6DE),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.calendar_today,
+                  color: Color(0xFF8F1A1A),
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${months[now.month - 1]} ${now.year}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF3B1F1B),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Today: ${now.day} ${months[now.month - 1].substring(0, 3)}',
+                    style: const TextStyle(
+                      fontSize: 9,
+                      color: Color(0xFF8F8079),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final maxWidth = constraints.maxWidth;
+              const gap = 4.0;
+              final cellSize =
+                  ((maxWidth - gap * 6) / 7).clamp(16.0, 24.0);
+              return Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: days
+                        .map(
+                          (d) => SizedBox(
+                            width: cellSize,
+                            child: Text(
+                              d,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 9,
+                                color: Color(0xFF8F8079),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  const SizedBox(height: 6),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 7,
+                      crossAxisSpacing: gap,
+                      mainAxisSpacing: gap,
+                      childAspectRatio: 1,
+                    ),
+                    itemCount: dates.length,
+                    itemBuilder: (context, index) {
+                      final d = dates[index];
+                      final isToday = d == '${now.day}';
+                      return Container(
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: d.isEmpty
+                              ? Colors.transparent
+                              : isToday
+                                  ? const Color(0xFF8F1A1A)
+                                  : const Color(0xFFF8EFE5),
+                          borderRadius: BorderRadius.circular(cellSize / 2),
+                        ),
+                        child: Text(
+                          d,
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: isToday
+                                ? Colors.white
+                                : const Color(0xFF6F6561),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 
 class _ChartCard extends StatelessWidget {
   const _ChartCard({required this.isMobile});
@@ -438,6 +795,16 @@ class _NotificationCard extends StatelessWidget {
             text: 'Grafik pendapatan meningkat drastis',
             date: '2/4/2026',
           ),
+          const SizedBox(height: 10),
+          _NotificationEntry(
+            text: 'Kasir baru saja menambahkan transaksi tunai',
+            date: '5/4/2026',
+          ),
+          const SizedBox(height: 10),
+          _NotificationEntry(
+            text: 'Stok bahan baku kopi hampir habis',
+            date: '7/4/2026',
+          ),
         ],
       ),
     );
@@ -491,7 +858,7 @@ class _NotificationEntry extends StatelessWidget {
 }
 
 class _TrendingCard extends StatelessWidget {
-  const _TrendingCard({required this.isMobile});
+  const _TrendingCard({required this.isMobile, super.key});
 
   final bool isMobile;
 
@@ -526,18 +893,21 @@ class _TrendingCard extends StatelessWidget {
             title: 'Burger',
             subtitle: 'Beef Burger',
             price: 'Rp. 10.000,00',
+            imagePath: 'assets/images/menu1.png',
           ),
           const SizedBox(height: 14),
           const _TrendingItem(
             title: 'Es Teh',
             subtitle: 'Iced Tea',
             price: 'Rp. 5.000,00',
+            imagePath: 'assets/images/menu3.png',
           ),
           const SizedBox(height: 14),
           const _TrendingItem(
             title: 'Tahu crispy',
             subtitle: 'Crispy Tofu',
             price: 'Rp. 15.000,00',
+            imagePath: 'assets/images/menu5.png',
           ),
         ],
       ),
@@ -550,11 +920,13 @@ class _TrendingItem extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.price,
+    required this.imagePath,
   });
 
   final String title;
   final String subtitle;
   final String price;
+  final String imagePath;
 
   @override
   Widget build(BuildContext context) {
@@ -580,7 +952,10 @@ class _TrendingItem extends StatelessWidget {
               color: const Color(0xFFF7E2D9),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.fastfood, color: Color(0xFF8F1A1A)),
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Image.asset(imagePath, fit: BoxFit.contain),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -645,37 +1020,33 @@ class _BestSellerCard extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
-            child: const Text(
-              'Best Seller Menu',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF3A1F1B),
-              ),
+            child: Row(
+              children: const [
+                Icon(
+                  Icons.calendar_today,
+                  color: Color(0xFF8F1A1A),
+                  size: 18,
+                ),
+                SizedBox(width: 8),
+                Text(
+                  'Kalender',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF3A1F1B),
+                  ),
+                ),
+              ],
             ),
           ),
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(18),
-              bottomRight: Radius.circular(18),
-            ),
-            child: Image.network(
-              'https://images.unsplash.com/photo-1551218808-94e220e084d2?auto=format&fit=crop&w=800&q=80',
-              height: 180,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  height: 180,
-                  width: double.infinity,
-                  color: const Color(0xFFF4ECE3),
-                  child: const Icon(
-                    Icons.restaurant_menu,
-                    color: Color(0xFF8F1A1A),
-                    size: 48,
-                  ),
-                );
-              },
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+            child: const Align(
+              alignment: Alignment.center,
+              child: SizedBox(
+                width: 260,
+                child: _MiniCalendarCard(),
+              ),
             ),
           ),
         ],

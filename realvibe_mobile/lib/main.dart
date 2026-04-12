@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'auth/login.dart';
-import 'dashboard/dashboard_page.dart';
+import 'loading/loading_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,9 +19,10 @@ class MyApp extends StatelessWidget {
         primaryColor: const Color(0xFF8B4513), // Cokelat (teks utama)
         useMaterial3: true,
       ),
-      home: const LoginPage(),
+
+      home: const LoadingPage(),
       debugShowCheckedModeBanner: false,
     );
   }
 }
- 
+
