@@ -1,4 +1,21 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
+import 'dashboardCs.dart'; // file yang akan kita buat
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: HomePage(), // ⬅️ arahkan ke UI baru
+    );
+  }
+}
+=======
 
 import 'loading/loading_page.dart';
 
@@ -26,3 +43,4 @@ class MyApp extends StatelessWidget {
   }
 }
 
+>>>>>>> 7c57db720f0eaac1a8d7a2d80c0b0e3db15139c6

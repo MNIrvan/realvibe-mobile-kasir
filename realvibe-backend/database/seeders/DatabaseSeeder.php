@@ -15,6 +15,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+<<<<<<< HEAD
+        // User::factory(10)->create();
+
+        User::factory()->create([
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+        ]);
+    }
+=======
         // Membuat Admin
     \App\Models\User::create([
         'nama' => 'Admin Cafe',
@@ -34,4 +43,5 @@ class DatabaseSeeder extends Seeder
     }
 
 
+>>>>>>> 7c57db720f0eaac1a8d7a2d80c0b0e3db15139c6
 }
