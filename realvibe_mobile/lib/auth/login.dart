@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
-import '../admin/dashboard_admin.dart';
 import '../dashboard/dashboard_page.dart';
 import '../kasir/dashboard_kasir.dart';
 
@@ -63,7 +61,7 @@ class _LoginPageState extends State<LoginPage> {
         if (role == 'kasir') {
           targetPage = const RevenueDashboard();
         } else if (role == 'admin') {
-          targetPage = const AdminDashboard();
+          targetPage = const DashboardPage();
         } else {
           targetPage = const DashboardPage();
         }

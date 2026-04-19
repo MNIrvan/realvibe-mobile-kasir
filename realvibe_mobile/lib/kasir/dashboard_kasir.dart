@@ -1,189 +1,225 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 class RevenueDashboard extends StatelessWidget {
   const RevenueDashboard({super.key});
 
+  // Konstanta Warna untuk konsistensi UI/UX
+  static const Color primaryMaroon = Color(0xFFA62A1B);
+  static const Color darkCard = Color(0xFF632117);
+  static const Color bgKrem = Color(0xFFF7EFE5);
+
   @override
   Widget build(BuildContext context) {
+    // Menggunakan LayoutBuilder agar responsif
     return Scaffold(
-      backgroundColor: const Color(0xFFF7EFE5), // Warna background krem
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(100),
-        child: Container(
-          color: const Color(0xFFA62A1B), // Warna merah marun
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          alignment: Alignment.bottomCenter,
+      backgroundColor: bgKrem,
+      appBar: _buildModernAppBar(),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Cek jika layar lebar (Tablet/Desktop mode) atau sempit (Mobile)
+          bool isMobile = constraints.maxWidth < 800;
+
+          return AnimationLimiter(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: isMobile 
+                ? Column(children: _buildContent(context)) // Tampilan tumpuk untuk HP
+                : Row( // Tampilan samping untuk Tablet/Web
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 5, child: Column(children: _buildLeftSection())),
+                      const SizedBox(width: 25),
+                      Expanded(flex: 4, child: Column(children: _buildRightSection())),
+                    ],
+                  ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // --- APPBAR MODERN ---
+  PreferredSizeWidget _buildModernAppBar() {
+    return AppBar(
+      elevation: 0,
+      toolbarHeight: 100,
+      backgroundColor: primaryMaroon,
+      flexibleSpace: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(
-                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
                     'Pendapatan',
-                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
                   ),
-                  Container(
-                    margin: const EdgeInsets.only(top: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Row(
-                      children: [
-                        CircleAvatar(radius: 4, backgroundColor: Colors.orange),
-                        SizedBox(width: 4),
-                        Text('Adinda dian', style: TextStyle(fontSize: 10)),
-                      ],
-                    ),
-                  )
+                  const SizedBox(height: 5),
+                  _buildUserBadge('Adinda dian'),
                 ],
               ),
               const Text(
                 'Real-Vibe',
-                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, fontStyle: FontStyle.italic),
+                style: TextStyle(color: Colors.white24, fontSize: 28, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic),
               )
             ],
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // SISI KIRI (Statistik & Grafik)
-            Expanded(
-              flex: 5,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDateHeader(),
-                  const SizedBox(height: 16),
-                  _buildStatCards(),
-                  const SizedBox(height: 20),
-                  _buildGraphSection(),
-                ],
-              ),
-            ),
-            const SizedBox(width: 20),
-            // SISI KANAN (Action Buttons & Pesanan)
-            Expanded(
-              flex: 4,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildActionButtons(),
-                  const SizedBox(height: 20),
-                  const Text('Pesanan Masuk', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  _buildOrderCard("#RV-001", "Budi Haryono", "Rp 60.000"),
-                  const SizedBox(height: 12),
-                  _buildOrderCard("#RV-002", "Budi Hariyadi", "Rp 30.000"),
-                ],
-              ),
-            ),
-          ],
-        ),
+    );
+  }
+
+  Widget _buildUserBadge(String name) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white30),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(radius: 4, backgroundColor: Colors.orangeAccent),
+          const SizedBox(width: 6),
+          Text(name, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
+        ],
       ),
     );
   }
 
-  // Widget Header Tanggal
+  // --- LOGIC TATA LETAK ---
+  List<Widget> _buildContent(BuildContext context) {
+    return [
+      ..._buildLeftSection(),
+      const SizedBox(height: 25),
+      ..._buildRightSection(),
+    ];
+  }
+
+  List<Widget> _buildLeftSection() {
+    return [
+      _animateWidget(_buildDateHeader()),
+      const SizedBox(height: 20),
+      _animateWidget(_buildStatCards()),
+      const SizedBox(height: 25),
+      _animateWidget(_buildGraphSection()),
+    ];
+  }
+
+  List<Widget> _buildRightSection() {
+    return [
+      _animateWidget(_buildActionButtons()),
+      const SizedBox(height: 30),
+      _animateWidget(const Align(
+        alignment: Alignment.centerLeft,
+        child: Text('Pesanan Masuk', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: darkCard)),
+      )),
+      const SizedBox(height: 15),
+      _animateWidget(_buildOrderCard("#RV-001", "Budi Haryono", "Rp 60.000")),
+      const SizedBox(height: 15),
+      _animateWidget(_buildOrderCard("#RV-002", "Budi Hariyadi", "Rp 30.000")),
+    ];
+  }
+
+  // --- WIDGET KOMPONEN ---
+
   Widget _buildDateHeader() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       decoration: BoxDecoration(
-        color: const Color(0xFFA62A1B),
-        borderRadius: BorderRadius.circular(8),
+        gradient: const LinearGradient(colors: [primaryMaroon, darkCard]),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [BoxShadow(color: primaryMaroon.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
       ),
       child: const Row(
         children: [
-          Icon(Icons.calendar_today, color: Colors.white),
-          SizedBox(width: 10),
+          Icon(Icons.calendar_month_rounded, color: Colors.white),
+          SizedBox(width: 15),
           Text('30 Maret 2026', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 
-  // Widget Kartu Total
   Widget _buildStatCards() {
     return Row(
       children: [
-        _statItem("Total Pendapatan", "Rp 23.000"),
-        const SizedBox(width: 12),
-        _statItem("Total Transaksi", "2"),
+        _statItem("Total Pendapatan", "Rp 23.000", Icons.payments_outlined),
+        const SizedBox(width: 15),
+        _statItem("Total Transaksi", "2", Icons.shopping_bag_outlined),
       ],
     );
   }
 
-  Widget _statItem(String title, String value) {
+  Widget _statItem(String title, String value, IconData icon) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFF632117), // Warna cokelat tua kartu
-          borderRadius: BorderRadius.circular(8),
+          color: darkCard,
+          borderRadius: BorderRadius.circular(18),
+          image: DecorationImage(
+            image: const NetworkImage('https://www.transparenttextures.com/patterns/carbon-fibre.png'),
+            opacity: 0.05,
+            repeat: ImageRepeat.repeat,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-            const SizedBox(height: 8),
-            Text(value, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+            Icon(icon, color: Colors.white54, size: 20),
+            const SizedBox(height: 12),
+            Text(title, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            const SizedBox(height: 5),
+            Text(value, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
     );
   }
 
-  // Widget Grafik
   Widget _buildGraphSection() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      height: 300,
+      padding: const EdgeInsets.fromLTRB(10, 20, 20, 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(color: const Color(0xFFA62A1B)),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))],
       ),
       child: Column(
         children: [
-          const Text('Grafik Pendapatan', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFA62A1B))),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 200,
+          const Text('Trend Pendapatan Mingguan', style: TextStyle(fontWeight: FontWeight.bold, color: primaryMaroon)),
+          const SizedBox(height: 25),
+          Expanded(
             child: LineChart(
               LineChartData(
-                gridData: FlGridData(show: true, drawVerticalLine: false),
+                gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.withOpacity(0.1), strokeWidth: 1)),
                 titlesData: FlTitlesData(
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        const years = ['2021', '2022', '2023', '2024', '2025'];
-                        final index = value.toInt();
-                        if (index >= 0 && index < years.length) {
-                          return Text(years[index]);
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
-                  ),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 30, getTitlesWidget: (value, meta) {
+                    const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum'];
+                    return Text(days[value.toInt() % 5], style: const TextStyle(color: Colors.grey, fontSize: 12));
+                  })),
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
                   LineChartBarData(
-                    spots: const [FlSpot(0, 8), FlSpot(1, 18), FlSpot(2, 20), FlSpot(3, 33), FlSpot(4, 35)],
+                    spots: [const FlSpot(0, 3), const FlSpot(1, 1.5), const FlSpot(2, 5), const FlSpot(3, 2.5), const FlSpot(4, 4)],
                     isCurved: true,
-                    color: const Color(0xFFA62A1B),
-                    barWidth: 4,
-                    dotData: FlDotData(show: true),
+                    gradient: const LinearGradient(colors: [primaryMaroon, Colors.orange]),
+                    barWidth: 5,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(show: true, gradient: LinearGradient(colors: [primaryMaroon.withOpacity(0.2), primaryMaroon.withOpacity(0)])),
                   ),
                 ],
               ),
@@ -194,35 +230,52 @@ class RevenueDashboard extends StatelessWidget {
     );
   }
 
-  // Widget Action Buttons (Atas kanan)
   Widget _buildActionButtons() {
     return Wrap(
-      spacing: 8,
+      spacing: 12,
+      runSpacing: 12,
       children: [
-        _actionBtn(Icons.lock_open, "Buka Kasir"),
-        _actionBtn(Icons.lock, "Tutup Kasir"),
-        _actionBtn(Icons.inventory_2_outlined, "Produk"),
-        _actionBtn(Icons.print, "Cetak"),
+        _actionBtn(Icons.add_shopping_cart, "Buka Kasir", Colors.green),
+        _actionBtn(Icons.no_meals, "Tutup Kasir", Colors.redAccent),
+        _actionBtn(Icons.inventory, "Produk", Colors.blueAccent),
+        _actionBtn(Icons.print_rounded, "Cetak", Colors.orange),
       ],
     );
   }
 
-  Widget _actionBtn(IconData icon, String label) {
-    return Chip(
-      backgroundColor: Colors.grey[300],
-      avatar: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 10)),
+  Widget _actionBtn(IconData icon, String label, Color color) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withOpacity(0.5)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: color),
+              const SizedBox(width: 8),
+              Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  // Widget Kartu Pesanan
   Widget _buildOrderCard(String id, String name, String total) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFD9D9D9),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 4))],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,29 +283,60 @@ class RevenueDashboard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(id, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              const Row(
-                children: [
-                  Icon(Icons.access_time, color: Colors.red, size: 18),
-                  SizedBox(width: 4),
-                  Text("10.00", style: TextStyle(fontWeight: FontWeight.bold)),
-                ],
+              Text(id, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: primaryMaroon)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(8)),
+                child: Row(
+                  children: const [
+                    Icon(Icons.timer_outlined, color: Colors.red, size: 14),
+                    SizedBox(width: 4),
+                    Text("10.00", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12)),
+                  ],
+                ),
               )
             ],
           ),
-          Text(name, style: const TextStyle(fontSize: 16)),
-          const Divider(color: Colors.black54),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [Text("2x Mie Goreng"), Text("Rp 30.000")],
+          const SizedBox(height: 5),
+          Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1),
           ),
-          const Row(
+          _orderRow("2x Mie Goreng", "Rp 30.000"),
+          _orderRow("1x Es Teh", "Rp 5.000"),
+          const SizedBox(height: 15),
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [Text("1x Es Teh"), Text("Rp 5.000")],
+            children: [
+              const Text("Total", style: TextStyle(color: Colors.grey)),
+              Text(total, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: darkCard)),
+            ],
           ),
-          const SizedBox(height: 12),
-          Text(total, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         ],
+      ),
+    );
+  }
+  Widget _orderRow(String item, String price) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(item, style: const TextStyle(color: Colors.black87)),
+          Text(price, style: const TextStyle(color: Colors.black54, fontSize: 13)),
+        ],
+      ),
+    );
+  }
+  // Helper untuk animasi masuk
+  Widget _animateWidget(Widget child) {
+    return AnimationConfiguration.staggeredList(
+      position: 0,
+      duration: const Duration(milliseconds: 600),
+      child: SlideAnimation(
+        verticalOffset: 30.0,
+        child: FadeInAnimation(child: child),
       ),
     );
   }
