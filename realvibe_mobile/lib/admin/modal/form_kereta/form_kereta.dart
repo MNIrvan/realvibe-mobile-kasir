@@ -3,10 +3,25 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+class PickedKeretaImage {
+  final Uint8List bytes;
+  final String fileName;
+
+  PickedKeretaImage({
+    required this.bytes,
+    required this.fileName,
+  });
+}
+
 class FormKereta extends StatefulWidget {
-  const FormKereta({super.key, this.initialImage});
+  const FormKereta({
+    super.key,
+    this.initialImage,
+    this.initialFileName,
+  });
 
   final Uint8List? initialImage;
+  final String? initialFileName;
 
   @override
   State<FormKereta> createState() => _FormKeretaState();
@@ -14,27 +29,33 @@ class FormKereta extends StatefulWidget {
 
 class _FormKeretaState extends State<FormKereta> {
   Uint8List? _imageBytes;
+  String? _imageFileName;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _imageBytes = widget.initialImage;
+    _imageFileName = widget.initialFileName;
   }
 
   Future<void> _pickImage() async {
     setState(() {
       _isLoading = true;
     });
+
     final picker = ImagePicker();
     final file = await picker.pickImage(source: ImageSource.gallery);
+
     if (file != null) {
       final bytes = await file.readAsBytes();
       if (!mounted) return;
       setState(() {
         _imageBytes = bytes;
+        _imageFileName = file.name;
       });
     }
+
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -171,13 +192,19 @@ class _FormKeretaState extends State<FormKereta> {
               child: Padding(
                 padding: const EdgeInsets.only(right: 16, bottom: 16),
                 child: InkWell(
-                  onTap: () => Navigator.of(context).pop(_imageBytes),
+                  onTap: _imageBytes != null && _imageFileName != null
+                      ? () => Navigator.of(context).pop(
+                            PickedKeretaImage(
+                              bytes: _imageBytes!,
+                              fileName: _imageFileName!,
+                            ),
+                          )
+                      : null,
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF2A53A),
+                      color: _imageBytes != null ? const Color(0xFFF2A53A) : const Color(0xFFCCCCCC),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Row(

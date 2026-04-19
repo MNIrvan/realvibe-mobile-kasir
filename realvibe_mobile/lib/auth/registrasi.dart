@@ -24,7 +24,7 @@ class _RegisterPageState extends State<RegisterPage> {
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      final String url = 'http://10.0.2.2:8000/api/register'; // Sesuaikan IP
+      final String url = 'http://localhost/api/register'; // Sesuaikan IP
 
       try {
         final response = await http.post(

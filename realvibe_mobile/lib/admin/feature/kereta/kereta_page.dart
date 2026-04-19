@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../../modal/form_kereta/form_kereta.dart';
+import 'kereta_service.dart';
 
 class KeretaPage extends StatefulWidget {
   const KeretaPage({super.key, required this.isMobile});
@@ -14,11 +15,99 @@ class KeretaPage extends StatefulWidget {
 }
 
 class _KeretaPageState extends State<KeretaPage> {
-  Uint8List? _imageBytes;
+  PickedKeretaImage? _pickedImage;
+  String? _serverImageUrl;
+  int? _keretaId;
+  bool _isLoading = true;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadKereta();
+  }
+
+  Future<void> _loadKereta() async {
+    try {
+      final kereta = await KeretaService.fetchFirstKereta();
+      if (!mounted) return;
+      setState(() {
+        _keretaId = kereta?.id;
+        _serverImageUrl = kereta?.gambarUrl;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _saveImage() async {
+    if (_pickedImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pilih gambar terlebih dahulu.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final result = _keretaId == null
+          ? await KeretaService.createKeretaFoto(
+              imageBytes: _pickedImage!.bytes,
+              imageFileName: _pickedImage!.fileName,
+            )
+          : await KeretaService.uploadKeretaFoto(
+              id: _keretaId!,
+              imageBytes: _pickedImage!.bytes,
+              imageFileName: _pickedImage!.fileName,
+            );
+
+      if (!mounted) return;
+      setState(() {
+        _keretaId = result.id;
+        _serverImageUrl = result.gambarUrl;
+        _pickedImage = null;
+        _isSaving = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto jadwal berhasil disimpan.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isSaving = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menyimpan gambar: $error')),
+      );
+    }
+  }
+
+  Future<void> _openForm() async {
+    final result = await showDialog<PickedKeretaImage>(
+      context: context,
+      builder: (_) => FormKereta(
+        initialImage: _pickedImage?.bytes,
+        initialFileName: _pickedImage?.fileName,
+      ),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _pickedImage = result;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isMobile = widget.isMobile;
+
     return Stack(
       children: [
         SingleChildScrollView(
@@ -37,11 +126,17 @@ class _KeretaPageState extends State<KeretaPage> {
                 child: Column(
                   children: [
                     _UploadCard(
-                      imageBytes: _imageBytes,
+                      imageBytes: _pickedImage?.bytes,
+                      serverImageUrl: _serverImageUrl,
+                      isLoading: _isLoading,
                       onTap: _openForm,
                     ),
                     const SizedBox(height: 16),
-                    const _SaveButton(),
+                    _SaveButton(
+                      onTap: _saveImage,
+                      enabled: !_isSaving && _pickedImage != null,
+                      isSaving: _isSaving,
+                    ),
                   ],
                 ),
               ),
@@ -161,14 +256,71 @@ class _KeretaTitle extends StatelessWidget {
 class _UploadCard extends StatelessWidget {
   const _UploadCard({
     required this.imageBytes,
+    required this.serverImageUrl,
+    required this.isLoading,
     required this.onTap,
   });
 
   final Uint8List? imageBytes;
+  final String? serverImageUrl;
+  final bool isLoading;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    Widget content;
+
+    if (isLoading) {
+      content = const Center(
+        child: CircularProgressIndicator(
+          color: Colors.white,
+        ),
+      );
+    } else if (imageBytes != null) {
+      content = ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Image.memory(
+          imageBytes!,
+          fit: BoxFit.cover,
+        ),
+      );
+    } else if (serverImageUrl != null) {
+      content = ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Image.network(
+          serverImageUrl!,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const Center(
+            child: Icon(Icons.broken_image, color: Colors.white, size: 34),
+          ),
+          loadingBuilder: (_, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Colors.white,
+              ),
+            );
+          },
+        ),
+      );
+    } else {
+      content = const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.photo_camera, color: Colors.white, size: 34),
+          SizedBox(height: 8),
+          Text(
+            '+ Tambah Foto',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      );
+    }
+
     return Container(
       width: 560,
       height: 440,
@@ -186,68 +338,53 @@ class _UploadCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
-        child: imageBytes == null
-            ? const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.photo_camera, color: Colors.white, size: 34),
-                  SizedBox(height: 8),
-                  Text(
-                    '+ Tambah Foto',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              )
-            : ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Image.memory(
-                  imageBytes!,
-                  fit: BoxFit.cover,
-                ),
-              ),
+        child: content,
       ),
     );
-  }
-}
-
-extension on _KeretaPageState {
-  Future<void> _openForm() async {
-    final result = await showDialog<Uint8List>(
-      context: context,
-      builder: (_) => FormKereta(initialImage: _imageBytes),
-    );
-    if (result != null && mounted) {
-      setState(() {
-        _imageBytes = result;
-      });
-    }
   }
 }
 
 class _SaveButton extends StatelessWidget {
-  const _SaveButton();
+  const _SaveButton({
+    required this.onTap,
+    required this.enabled,
+    required this.isSaving,
+  });
+
+  final VoidCallback onTap;
+  final bool enabled;
+  final bool isSaving;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 120,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF8F1A1A),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: const Center(
-        child: Text(
-          'Ganti Gambar',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            fontSize: 12,
-          ),
+    return InkWell(
+      onTap: enabled ? onTap : null,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: 120,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: enabled ? const Color(0xFF8F1A1A) : const Color(0xFFB29B99),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Center(
+          child: isSaving
+              ? const SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : const Text(
+                  'Ganti Gambar',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
         ),
       ),
     );
