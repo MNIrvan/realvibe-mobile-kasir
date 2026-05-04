@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../dashboard/dashboard_page.dart';
 import '../kasir/dashboard_kasir.dart';
+import '../dashboardCs.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -30,9 +32,12 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      // Jika di Web gunakan localhost, jika di Android gunakan 10.0.2.2
-      // final String domain = kIsWeb ? 'localhost' : '10.0.2.2';
-      final url = Uri.parse('http://127.0.0.1:8000/api/login');
+      final host = kIsWeb
+          ? '127.0.0.1'
+          : defaultTargetPlatform == TargetPlatform.android
+              ? '10.0.2.2'
+              : '127.0.0.1';
+      final url = Uri.parse('http://$host:8000/api/login');
 
       final response = await http.post(
         url,
@@ -62,6 +67,8 @@ class _LoginPageState extends State<LoginPage> {
           targetPage = const RevenueDashboard();
         } else if (role == 'admin') {
           targetPage = const DashboardPage();
+        } else if (role == 'customer') {
+          targetPage = DashboardCS();
         } else {
           targetPage = const DashboardPage();
         }

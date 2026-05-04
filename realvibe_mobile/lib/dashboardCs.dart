@@ -163,4 +163,74 @@ class _DashboardCSState extends State<DashboardCS> {
     );
   }
 
+  Widget _buildCategories() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Kategori", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _categoryItem("Makanan"),
+                _categoryItem("Minuman"),
+                _categoryItem("Dessert"),
+                _categoryItem("Promo"),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _categoryItem(String category) {
+    return Container(
+      margin: EdgeInsets.only(right: 10),
+      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+      decoration: BoxDecoration(
+        color: Color(0xFFC02700),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(category, style: TextStyle(color: Colors.white, fontSize: 14)),
+    );
+  }
+
+  Widget _buildTopMenu() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Menu Populer", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          SizedBox(height: 10),
+          _menuItem("Burger Spesial", "Rp 45.000"),
+          _menuItem("Ayam Goreng", "Rp 35.000"),
+          _menuItem("Pizza Margarita", "Rp 60.000"),
+        ],
+      ),
+    );
+  }
+
+  Widget _menuItem(String name, String price) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(price, style: TextStyle(color: Color(0xFFC02700), fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
 }

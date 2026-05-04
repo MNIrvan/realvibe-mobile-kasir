@@ -15,28 +15,37 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // 1. Membuat Test User (Bawaan Laravel)
+        User::create([
         // User::factory(10)->create();
 
         User::factory()->create([
             'name' => 'Test User',
-            'email' => 'test@example.com',
+            'username' => 'testuser',
+            'password' => bcrypt('password123'),
+            'role' => 'user',
         ]);
-    }
-        // Membuat Admin
-    \App\Models\User::create([
-        'nama' => 'Admin Cafe',
-        'username' => 'admin',
-        'password' => bcrypt('admin123'),
-        'role' => 'admin',
-    ]);
 
-    // Membuat Kasir
-    \App\Models\User::create([
-        'nama' => 'Kasir Cafe',
-        'username' => 'kasir',
-        'password' => bcrypt('kasir123'),
-        'role' => 'kasir',
-    ]);
+        // 2. Membuat Admin (Sesuai kebutuhan Natta Coffee)
+        User::create([
+            'name' => 'Admin Cafe',
+            'username' => 'admin',
+            'password' => bcrypt('admin123'),
+            'role' => 'admin',
+        ]);
 
-    }
+        // 3. Membuat Kasir (Sesuai kebutuhan Natta Coffee)
+        User::create([
+            'name' => 'Kasir Cafe',
+            'username' => 'kasir',
+            'password' => bcrypt('kasir123'),
+            'role' => 'kasir',
+        ]);
+    } // Pastikan semua kode di atas berada SEBELUM kurung ini
 }
+   
+
+
+
+
+

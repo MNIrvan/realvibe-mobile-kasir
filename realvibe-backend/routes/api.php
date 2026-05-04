@@ -13,6 +13,12 @@ use App\Http\Controllers\Api\KeretaController;
 
 
 Route::controller(AuthController::class)->group(function () {
+    Route::get('/user', function () {
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Backend is running',
+        ]);
+    });
     Route::post('/login', 'login');
     Route::post('/register', 'register');
     Route::post('/logout', 'logout')->middleware('auth:sanctum');
