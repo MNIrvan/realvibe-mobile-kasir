@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import '../auth/login.dart';
+import '../dashboardCs.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});
@@ -158,13 +161,36 @@ class _LoadingPageState extends State<LoadingPage>
       _controller.stop();
       return;
     }
+    
+    // Check if backend is running and get user role
+    Widget nextPage = const LoginPage(); // Default to login page
+    try {
+      final host = kIsWeb
+          ? '127.0.0.1'
+          : defaultTargetPlatform == TargetPlatform.android
+              ? '10.0.2.2'
+              : '127.0.0.1';
+      final response = await http
+          .get(Uri.parse('http://$host:8000/api/user'))
+          .timeout(const Duration(seconds: 5));
+      
+      if (response.statusCode == 200) {
+        // Backend is running, user might be authenticated
+        // For now, redirect to customer dashboard if backend is reachable
+        nextPage = DashboardCS();
+      }
+    } catch (e) {
+      // Backend is not running or user is not authenticated, go to login
+      nextPage = const LoginPage();
+    }
+    
     _controller
       ..reset()
       ..forward();
     _timer = Timer(const Duration(seconds: 3), () {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
+        MaterialPageRoute(builder: (_) => nextPage),
       );
     });
   }

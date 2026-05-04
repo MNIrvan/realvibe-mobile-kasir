@@ -28,7 +28,7 @@ class AuthController extends Controller
                 'message' => 'Login berhasil',
                 'data' => [
                     'id' => $user->id,
-                    'nama' => $user->nama,
+                    'nama' => $user->name,
                     'username' => $user->username,
                     'role' => $user->role,
                 ]
@@ -52,11 +52,11 @@ class AuthController extends Controller
             'password' => 'required|min:6',
         ]);
 
-        // 2. Simpan ke Database dengan Password Hashing (Bcrypt)
+        // 2. Simpan ke Database dengan Password Hashing otomatis dari model
         $user = User::create([
-            'nama' => $request->nama,
+            'name' => $request->nama,
             'username' => $request->username,
-            'password' => Hash::make($request->password), // Password otomatis di-hash
+            'password' => Hash::make($request->password),
         ]);
 
         return response()->json([
