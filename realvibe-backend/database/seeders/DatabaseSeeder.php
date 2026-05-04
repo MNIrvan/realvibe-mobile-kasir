@@ -17,6 +17,9 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Membuat Test User (Bawaan Laravel)
         User::create([
+        // User::factory(10)->create();
+
+        User::factory()->create([
             'name' => 'Test User',
             'username' => 'testuser',
             'password' => bcrypt('password123'),
@@ -40,6 +43,9 @@ class DatabaseSeeder extends Seeder
         ]);
     } // Pastikan semua kode di atas berada SEBELUM kurung ini
 }
+   
+
+
 
 
 
