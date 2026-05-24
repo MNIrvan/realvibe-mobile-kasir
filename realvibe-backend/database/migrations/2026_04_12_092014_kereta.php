@@ -14,7 +14,12 @@ return new class extends Migration
         //
         Schema::create('kereta', function (Blueprint $table) {
             $table->id();
-            $table->string('gambar');
+            $table->string('rute')->nullable();
+            $table->time('waktu_keberangkatan')->nullable();
+            $table->integer('kuota_maksimal')->default(0);
+            $table->integer('sisa_kuota')->default(0);
+            $table->integer('harga_tiket')->nullable();
+            $table->string('gambar')->nullable();
             $table->timestamps();
         });
     }

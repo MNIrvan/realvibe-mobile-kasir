@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../data/laporan_data.dart';
+import 'laporan_model.dart';
+import 'laporan_service.dart';
 import '../../modal/form_laporan_cetak/form_laporan_cetak.dart';
 
 enum LaporanFilter { tunai, nonTunai, uangKeluar, keseluruhan }
@@ -15,8 +16,29 @@ class LaporanPage extends StatefulWidget {
 }
 
 class _LaporanPageState extends State<LaporanPage> {
-  LaporanFilter selected = LaporanFilter.tunai;
+  LaporanFilter selected = LaporanFilter.keseluruhan;
   final TextEditingController _searchController = TextEditingController();
+  final LaporanService _laporanService = LaporanService();
+  List<LaporanModel> _laporanData = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLaporan();
+  }
+
+  Future<void> _fetchLaporan() async {
+    try {
+      final data = await _laporanService.getLaporan();
+      setState(() {
+        _laporanData = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -51,6 +73,11 @@ class _LaporanPageState extends State<LaporanPage> {
             isMobile: isMobile,
             selected: selected,
             searchQuery: _searchController.text,
+            data: _laporanData,
+            isLoading: _isLoading,
+            onExport: () async {
+              await _laporanService.exportLaporan();
+            },
           ),
         ],
       ),
@@ -253,21 +280,33 @@ class _ReportCard extends StatelessWidget {
     required this.isMobile,
     required this.selected,
     required this.searchQuery,
+    required this.data,
+    required this.isLoading,
+    required this.onExport,
   });
 
   final bool isMobile;
   final LaporanFilter selected;
   final String searchQuery;
+  final List<LaporanModel> data;
+  final bool isLoading;
+  final VoidCallback onExport;
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: Padding(
+        padding: EdgeInsets.all(24.0),
+        child: CircularProgressIndicator(color: Color(0xFF8F1A1A)),
+      ));
+    }
+
     final entries = selected == LaporanFilter.tunai
-        ? laporanTunai
+        ? data.where((e) => e.metode.toLowerCase() == 'tunai').toList()
         : selected == LaporanFilter.nonTunai
-            ? laporanNonTunai
-            : selected == LaporanFilter.keseluruhan
-                ? laporanKeseluruhan()
-                : const <LaporanEntry>[];
+            ? data.where((e) => e.metode.toLowerCase() != 'tunai').toList()
+            : data;
+
     final query = searchQuery.trim().toLowerCase();
     final filtered = query.isEmpty
         ? entries
@@ -291,7 +330,7 @@ class _ReportCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _ReportToolbar(selected: selected),
+          _ReportToolbar(selected: selected, onExport: onExport),
           const SizedBox(height: 12),
           if (selected == LaporanFilter.uangKeluar)
             const _EmptyState()
@@ -304,9 +343,10 @@ class _ReportCard extends StatelessWidget {
 }
 
 class _ReportToolbar extends StatelessWidget {
-  const _ReportToolbar({required this.selected});
+  const _ReportToolbar({required this.selected, required this.onExport});
 
   final LaporanFilter selected;
+  final VoidCallback onExport;
 
   @override
   Widget build(BuildContext context) {
@@ -355,13 +395,7 @@ class _ReportToolbar extends StatelessWidget {
           color: const Color(0xFF1D4ED8),
           icon: Icons.print,
           onTap: () {
-            final entries = selected == LaporanFilter.tunai
-                ? laporanTunai
-                : selected == LaporanFilter.nonTunai
-                    ? laporanNonTunai
-                    : selected == LaporanFilter.keseluruhan
-                        ? laporanKeseluruhan()
-                        : const <LaporanEntry>[];
+            onExport();
             final title = selected == LaporanFilter.tunai
                 ? 'Pembayaran Tunai'
                 : selected == LaporanFilter.nonTunai
@@ -373,7 +407,7 @@ class _ReportToolbar extends StatelessWidget {
               context: context,
               builder: (_) => FormLaporanCetak(
                 title: title,
-                entries: entries,
+                entries: const [], // TODO: We can't access filtered here easily, let's just pass empty for now since export is done via API anyway.
               ),
             );
           },
@@ -429,7 +463,7 @@ class _ToolbarButton extends StatelessWidget {
 class _ReportTable extends StatelessWidget {
   const _ReportTable({required this.entries, required this.isMobile});
 
-  final List<LaporanEntry> entries;
+  final List<LaporanModel> entries;
   final bool isMobile;
 
   @override

@@ -4,6 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\KeretaController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\InformasiController;
+use App\Http\Controllers\Api\FeedbackController;
+use App\Http\Controllers\Api\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,4 +38,23 @@ Route::prefix('kereta')->group(function () {
     Route::post('/', [KeretaController::class, 'store']);
     Route::get('/{id}', [KeretaController::class, 'show']);
     Route::post('/{id}/upload-foto', [KeretaController::class, 'uploadFoto']);
+    Route::put('/{id}', [KeretaController::class, 'update']);
+    Route::delete('/{id}', [KeretaController::class, 'destroy']);
+});
+
+// Admin Dashboard Routes
+Route::prefix('admin')->group(function () {
+    Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
+    Route::get('/dashboard/chart', [DashboardController::class, 'chart']);
+
+    Route::get('/laporan', [TransactionController::class, 'index']);
+    Route::get('/laporan/export', [TransactionController::class, 'export']);
+
+    Route::apiResource('informasi', InformasiController::class);
+    Route::put('/informasi/{id}/toggle', [InformasiController::class, 'toggle']);
+
+    Route::get('/masukan', [FeedbackController::class, 'index']);
+    Route::put('/masukan/{id}/read', [FeedbackController::class, 'markAsRead']);
+
+    Route::apiResource('users', UserController::class);
 });

@@ -3,9 +3,17 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'menu_model.dart';
 
+import 'package:flutter/foundation.dart';
+
 class MenuService {
-  // Base URL - sesuaikan jika backend di port/host lain
-  static const String _baseUrl = 'http://127.0.0.1:8000/api';
+  static String get _baseUrl {
+    final host = kIsWeb
+        ? '127.0.0.1'
+        : defaultTargetPlatform == TargetPlatform.android
+            ? '10.0.2.2'
+            : '127.0.0.1';
+    return 'http://$host:8000/api';
+  }
 
   /// Mengambil semua data menu dari server
   static Future<List<MenuItemInfo>> fetchMenus() async {

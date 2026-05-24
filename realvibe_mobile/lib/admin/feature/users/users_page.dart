@@ -1,14 +1,52 @@
 import 'package:flutter/material.dart';
-
 import '../../modal/form_tambah_user/tambah_user_form.dart';
+import 'user_model.dart';
+import 'user_service.dart';
 
-class UsersPage extends StatelessWidget {
+class UsersPage extends StatefulWidget {
   const UsersPage({super.key, required this.isMobile});
 
   final bool isMobile;
 
   @override
+  State<UsersPage> createState() => _UsersPageState();
+}
+
+class _UsersPageState extends State<UsersPage> {
+  final UserService _service = UserService();
+  List<UserModel> _usersData = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUsers();
+  }
+
+  Future<void> _fetchUsers() async {
+    try {
+      final data = await _service.getUsers();
+      setState(() {
+        _usersData = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _deleteUser(int id) async {
+    try {
+      await _service.deleteUser(id);
+      _fetchUsers();
+    } catch (e) {
+      debugPrint('Delete error: $e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isMobile = widget.isMobile;
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
         horizontal: isMobile ? 16 : 24,
@@ -31,11 +69,12 @@ class UsersPage extends StatelessWidget {
               ),
               const Spacer(),
               InkWell(
-                onTap: () {
-                  showDialog(
+                onTap: () async {
+                  await showDialog(
                     context: context,
                     builder: (_) => const TambahUserForm(),
                   );
+                  _fetchUsers();
                 },
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
@@ -64,7 +103,9 @@ class UsersPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          _UsersTable(isMobile: isMobile),
+          _isLoading
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF8F1A1A)))
+            : _UsersTable(isMobile: isMobile, users: _usersData, onDelete: _deleteUser),
         ],
       ),
     );
@@ -149,9 +190,11 @@ class _HeaderSearch extends StatelessWidget {
 }
 
 class _UsersTable extends StatelessWidget {
-  const _UsersTable({required this.isMobile});
+  const _UsersTable({required this.isMobile, required this.users, required this.onDelete});
 
   final bool isMobile;
+  final List<UserModel> users;
+  final Function(int) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -177,12 +220,13 @@ class _UsersTable extends StatelessWidget {
                 Expanded(child: _HeaderText('Nama')),
                 Expanded(child: _HeaderText('Username')),
                 Expanded(child: _HeaderText('Password')),
-                Expanded(child: _HeaderText('No. Telp')),
+                Expanded(child: _HeaderText('Role')),
+                Expanded(child: _HeaderText('Aksi')),
               ],
             ),
           ),
           const SizedBox(height: 6),
-          ..._users
+          ...users
               .map(
                 (u) => Container(
                   padding:
@@ -194,7 +238,7 @@ class _UsersTable extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Expanded(child: _RowText(u.id)),
+                      Expanded(child: _RowText(u.id.toString())),
                       Expanded(
                         child: Row(
                           children: [
@@ -217,7 +261,11 @@ class _UsersTable extends StatelessWidget {
                       ),
                       Expanded(child: _RowText(u.username)),
                       Expanded(child: _RowText('••••••')),
-                      Expanded(child: _RowText(u.phone)),
+                      Expanded(child: _RowText(u.role)),
+                      Expanded(child: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red, size: 16),
+                        onPressed: () => onDelete(u.id),
+                      )),
                     ],
                   ),
                 ),
@@ -264,37 +312,3 @@ class _RowText extends StatelessWidget {
   }
 }
 
-class _UserRow {
-  const _UserRow({
-    required this.id,
-    required this.name,
-    required this.username,
-    required this.phone,
-  });
-
-  final String id;
-  final String name;
-  final String username;
-  final String phone;
-}
-
-const List<_UserRow> _users = [
-  _UserRow(
-    id: 'U001',
-    name: 'Rina Pratama',
-    username: 'rina.p',
-    phone: '0812-3344-2211',
-  ),
-  _UserRow(
-    id: 'U002',
-    name: 'Andi Saputra',
-    username: 'andi.s',
-    phone: '0813-7788-9900',
-  ),
-  _UserRow(
-    id: 'U003',
-    name: 'Dewi Lestari',
-    username: 'dewi.l',
-    phone: '0821-6677-4455',
-  ),
-];

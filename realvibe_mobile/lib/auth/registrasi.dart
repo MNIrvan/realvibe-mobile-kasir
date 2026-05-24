@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -24,7 +25,12 @@ class _RegisterPageState extends State<RegisterPage> {
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      final String url = 'http://localhost/api/register'; // Sesuaikan IP
+      final host = kIsWeb
+          ? '127.0.0.1'
+          : defaultTargetPlatform == TargetPlatform.android
+              ? '10.0.2.2'
+              : '127.0.0.1';
+      final String url = 'http://$host:8000/api/register';
 
       try {
         final response = await http.post(

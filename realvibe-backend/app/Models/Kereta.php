@@ -13,6 +13,11 @@ class Kereta extends Model
     protected $table = 'kereta';
 
     protected $fillable = [
+        'rute',
+        'waktu_keberangkatan',
+        'kuota_maksimal',
+        'sisa_kuota',
+        'harga_tiket',
         'gambar',
     ];
 

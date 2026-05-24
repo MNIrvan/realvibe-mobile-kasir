@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'masukan_model.dart';
+import 'masukan_service.dart';
 
 class MasukanPage extends StatefulWidget {
   const MasukanPage({super.key, required this.isMobile});
@@ -12,6 +14,36 @@ class MasukanPage extends StatefulWidget {
 class _MasukanPageState extends State<MasukanPage> {
   String selectedFilter = 'Terbaru';
   final TextEditingController _searchController = TextEditingController();
+  final MasukanService _service = MasukanService();
+  List<MasukanModel> _masukanData = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMasukan();
+  }
+
+  Future<void> _fetchMasukan() async {
+    try {
+      final data = await _service.getMasukan();
+      setState(() {
+        _masukanData = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _markAsRead(MasukanModel item) async {
+    try {
+      await _service.markAsRead(item.id);
+      _fetchMasukan();
+    } catch (e) {
+      debugPrint('Failed to mark read: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -51,17 +83,24 @@ class _MasukanPageState extends State<MasukanPage> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFFDAC2B8)),
               ),
-              child: Column(
+              child: _isLoading 
+                ? const Center(child: Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: CircularProgressIndicator(color: Color(0xFF8F1A1A)),
+                  ))
+                : Column(
                 children: [
                   ..._filteredItems
                       .map(
                         (item) => Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: _FeedbackCard(
-                            name: item.name,
-                            date: item.date,
+                            name: item.namaPelanggan,
+                            date: item.createdAt,
                             rating: item.rating,
-                            message: item.message,
+                            message: item.pesan,
+                            isRead: item.isRead,
+                            onRead: () => _markAsRead(item),
                           ),
                         ),
                       )
@@ -272,12 +311,16 @@ class _FeedbackCard extends StatelessWidget {
     required this.date,
     required this.rating,
     required this.message,
+    required this.isRead,
+    required this.onRead,
   });
 
   final String name;
   final String date;
   final int rating;
   final String message;
+  final bool isRead;
+  final VoidCallback onRead;
 
   @override
   Widget build(BuildContext context) {
@@ -331,21 +374,41 @@ class _FeedbackCard extends StatelessWidget {
               ),
               _RatingStars(rating: rating),
               const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF17C39A),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Text(
-                  'Konfirmasi',
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+              if (!isRead)
+                InkWell(
+                  onTap: onRead,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF17C39A),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'Konfirmasi',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'Dibaca',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black54,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -363,66 +426,25 @@ class _FeedbackCard extends StatelessWidget {
   }
 }
 
-class _FeedbackItem {
-  const _FeedbackItem({
-    required this.name,
-    required this.date,
-    required this.rating,
-    required this.message,
-  });
-
-  final String name;
-  final String date;
-  final int rating;
-  final String message;
-}
-
-const List<_FeedbackItem> _feedbackItems = [
-  _FeedbackItem(
-    name: 'Desi Febrianti',
-    date: '29 Mei 2026',
-    rating: 5,
-    message:
-        'Pelayanannya sudah cukup cepat dan menu yang tersedia juga beragam. Mungkin ke depannya bisa ditambahkan opsi pembayaran digital agar lebih praktis.',
-  ),
-  _FeedbackItem(
-    name: 'Daniel',
-    date: '17 Januari 2026',
-    rating: 4,
-    message:
-        'Tempatnya nyaman dan makanannya juga enak. Tapi kalau lagi ramai, proses pesan kadang agak lama karena harus antre dan menyampaikan pesanan ke kasir. Mungkin akan lebih enak kalau ada sistem pemesanan lewat aplikasi supaya lebih cepat dan praktis.',
-  ),
-  _FeedbackItem(
-    name: 'Nuril',
-    date: '29 Mei 2026',
-    rating: 3,
-    message:
-        'Makanan yang disajikan sudah cukup baik. Mungkin ke depannya tampilan penyajian bisa dibuat lebih menarik agar pengalaman makan menjadi lebih menyenangkan.',
-  ),
-  _FeedbackItem(
-    name: 'Adinda',
-    date: '3 Mei 2026',
-    rating: 5,
-    message:
-        'Rasa kopi enak dan konsisten. Suasana juga nyaman untuk kerja. Akan lebih lengkap jika tersedia colokan tambahan.',
-  ),
-  _FeedbackItem(
-    name: 'kelompok 2',
-    date: '26 April 2026',
-    rating: 4,
-    message:
-        'Pelayanan ramah dan cepat. Untuk menu pedas mungkin bisa ditambahkan level kepedasan agar lebih variatif.',
-  ),
-];
-
 extension on _MasukanPageState {
-  List<_FeedbackItem> get _filteredItems {
+  List<MasukanModel> get _filteredItems {
+    var items = _masukanData;
+    
+    // Sort logic based on filter
+    if (selectedFilter == 'Terbaru') {
+      items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    } else if (selectedFilter == 'Terlama') {
+      items.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    } else if (selectedFilter == 'Belum dibaca') {
+      items = items.where((e) => !e.isRead).toList();
+    }
+
     final query = _searchController.text.trim().toLowerCase();
-    if (query.isEmpty) return _feedbackItems;
-    return _feedbackItems.where((item) {
-      return item.name.toLowerCase().contains(query) ||
-          item.date.toLowerCase().contains(query) ||
-          item.message.toLowerCase().contains(query);
+    if (query.isEmpty) return items;
+    return items.where((item) {
+      return item.namaPelanggan.toLowerCase().contains(query) ||
+          item.createdAt.toLowerCase().contains(query) ||
+          item.pesan.toLowerCase().contains(query);
     }).toList();
   }
 }

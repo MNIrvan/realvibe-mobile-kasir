@@ -175,9 +175,9 @@ class _LoadingPageState extends State<LoadingPage>
           .timeout(const Duration(seconds: 5));
       
       if (response.statusCode == 200) {
-        // Backend is running, user might be authenticated
-        // For now, redirect to customer dashboard if backend is reachable
-        nextPage = DashboardCS();
+        // Backend is running
+        // Redirect ke LoginPage sesuai dengan instruksi
+        nextPage = const LoginPage();
       }
     } catch (e) {
       // Backend is not running or user is not authenticated, go to login
