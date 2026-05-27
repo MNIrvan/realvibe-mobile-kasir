@@ -6,9 +6,10 @@ import '../../modal/form_kereta/form_kereta.dart';
 import 'kereta_service.dart';
 
 class KeretaPage extends StatefulWidget {
-  const KeretaPage({super.key, required this.isMobile});
+  const KeretaPage({super.key, required this.isMobile, this.onOpenDrawer});
 
   final bool isMobile;
+  final VoidCallback? onOpenDrawer;
 
   @override
   State<KeretaPage> createState() => _KeretaPageState();
@@ -118,7 +119,10 @@ class _KeretaPageState extends State<KeretaPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _KeretaHeader(isMobile: isMobile),
+              _KeretaHeader(
+                isMobile: isMobile,
+                onOpenDrawer: widget.onOpenDrawer,
+              ),
               const SizedBox(height: 18),
               const _KeretaTitle(),
               const SizedBox(height: 18),
@@ -158,9 +162,10 @@ class _KeretaPageState extends State<KeretaPage> {
 }
 
 class _KeretaHeader extends StatelessWidget {
-  const _KeretaHeader({required this.isMobile});
+  const _KeretaHeader({required this.isMobile, this.onOpenDrawer});
 
   final bool isMobile;
+  final VoidCallback? onOpenDrawer;
 
   @override
   Widget build(BuildContext context) {
@@ -179,8 +184,13 @@ class _KeretaHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (isMobile)
-            const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
+          if (onOpenDrawer != null)
+            IconButton(
+              constraints: const BoxConstraints(),
+              padding: EdgeInsets.zero,
+              onPressed: onOpenDrawer,
+              icon: const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
+            ),
           if (isMobile) const SizedBox(width: 10),
           const Expanded(
             child: Text(

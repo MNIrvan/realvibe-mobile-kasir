@@ -18,6 +18,7 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool isSidebarExpanded = true;
   DashboardSection selectedSection = DashboardSection.dashboard;
   final GlobalKey _trendingKey = GlobalKey();
@@ -41,8 +42,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final box = context.findRenderObject() as RenderBox?;
     if (box == null) return;
     final newHeight = box.size.height;
-    if (_trendingHeight == null ||
-        (newHeight - _trendingHeight!).abs() > 1) {
+    if (_trendingHeight == null || (newHeight - _trendingHeight!).abs() > 1) {
       setState(() {
         _trendingHeight = newHeight;
       });
@@ -53,16 +53,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 900;
+    final isMobile = screenWidth < 768;
+    final isTablet = screenWidth >= 768 && screenWidth < 1200;
+    final useDrawer = isMobile || isTablet;
     final sidebarWidth = isSidebarExpanded ? 260.0 : 80.0;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _updateTrendingHeight();
     });
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: const Color(0xFFFCF5ED),
-      drawer: isMobile
+      drawer: useDrawer
           ? Drawer(
               child: DashboardSidebar(
                 isCollapsed: false,
@@ -76,7 +80,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (!isMobile)
+            if (!useDrawer)
               AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 width: sidebarWidth,
@@ -89,14 +93,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
             Expanded(
-              child: _DashboardBody(
-                isMobile: isMobile,
-                screenWidth: screenWidth,
+              child: Builder(
+                builder: (context) => _DashboardBody(
+                  isMobile: isMobile,
+                  isTablet: isTablet,
+                  screenWidth: screenWidth,
                 theme: theme,
                 selectedSection: selectedSection,
-                onOpenDrawer: () => Scaffold.of(context).openDrawer(),
+                onOpenDrawer: () => _scaffoldKey.currentState?.openDrawer(),
                 trendingKey: _trendingKey,
                 trendingHeight: _trendingHeight,
+              ),
               ),
             ),
           ],
@@ -109,6 +116,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 class _DashboardBody extends StatelessWidget {
   const _DashboardBody({
     required this.isMobile,
+    required this.isTablet,
     required this.screenWidth,
     required this.theme,
     required this.selectedSection,
@@ -118,6 +126,7 @@ class _DashboardBody extends StatelessWidget {
   });
 
   final bool isMobile;
+  final bool isTablet;
   final double screenWidth;
   final ThemeData theme;
   final DashboardSection selectedSection;
@@ -128,22 +137,22 @@ class _DashboardBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (selectedSection == DashboardSection.menu) {
-      return MenuPage(isMobile: isMobile);
+      return MenuPage(isMobile: isMobile, onOpenDrawer: onOpenDrawer);
     }
     if (selectedSection == DashboardSection.jadwal) {
-      return KeretaPage(isMobile: isMobile);
+      return KeretaPage(isMobile: isMobile, onOpenDrawer: onOpenDrawer);
     }
     if (selectedSection == DashboardSection.informasi) {
-      return InformasiPage(isMobile: isMobile);
+      return InformasiPage(isMobile: isMobile, onOpenDrawer: onOpenDrawer);
     }
     if (selectedSection == DashboardSection.masukan) {
-      return MasukanPage(isMobile: isMobile);
+      return MasukanPage(isMobile: isMobile, onOpenDrawer: onOpenDrawer);
     }
     if (selectedSection == DashboardSection.laporan) {
-      return LaporanPage(isMobile: isMobile);
+      return LaporanPage(isMobile: isMobile, onOpenDrawer: onOpenDrawer);
     }
     if (selectedSection == DashboardSection.users) {
-      return UsersPage(isMobile: isMobile);
+      return UsersPage(isMobile: isMobile, onOpenDrawer: onOpenDrawer);
     }
 
     if (selectedSection != DashboardSection.dashboard) {
@@ -168,26 +177,20 @@ class _DashboardBody extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(
-                      Icons.menu,
-                      color: Colors.black87,
-                    ),
+                    icon: const Icon(Icons.menu, color: Colors.black87),
                     onPressed: onOpenDrawer,
                   ),
                   const SizedBox(width: 8),
                   const Text(
                     'Real-Vibe Admin',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
             ),
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 16 : 24,
               vertical: 20,
             ),
             decoration: BoxDecoration(
@@ -204,10 +207,13 @@ class _DashboardBody extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                Wrap(
+                  runSpacing: 12,
+                  spacing: 12,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Expanded(
+                    SizedBox(
+                      width: isMobile ? double.infinity : 240,
                       child: Text(
                         'Welcome Admin !',
                         style: theme.textTheme.headlineSmall?.copyWith(
@@ -216,36 +222,33 @@ class _DashboardBody extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: SizedBox(
-                          width: isMobile ? screenWidth * 0.55 : 420,
-                          child: TextField(
-                            decoration: InputDecoration(
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 14,
-                                horizontal: 18,
-                              ),
-                              hintText: 'Telusuri disini',
-                              hintStyle: const TextStyle(
-                                color: Color(0xFF8A8A8A),
-                              ),
-                              prefixIcon: const Icon(
-                                Icons.menu,
-                                color: Color(0xFF8A8A8A),
-                              ),
-                              suffixIcon: const Icon(
-                                Icons.search,
-                                color: Color(0xFF8A8A8A),
-                              ),
-                              filled: true,
-                              fillColor: const Color(0xFFF5F1EE),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide.none,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
+                    SizedBox(
+                      width: isMobile
+                          ? double.infinity
+                          : (isTablet ? screenWidth * 0.4 : 420),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                            horizontal: 18,
+                          ),
+                          hintText: 'Telusuri disini',
+                          hintStyle: const TextStyle(
+                            color: Color(0xFF8A8A8A),
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.menu,
+                            color: Color(0xFF8A8A8A),
+                          ),
+                          suffixIcon: const Icon(
+                            Icons.search,
+                            color: Color(0xFF8A8A8A),
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFFF5F1EE),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.circular(14),
                           ),
                         ),
                       ),
@@ -256,40 +259,48 @@ class _DashboardBody extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          _DashboardSummaryPanel(isMobile: isMobile),
+          _DashboardSummaryPanel(isMobile: isMobile, isTablet: isTablet),
           const SizedBox(height: 24),
-          Flex(
-            direction: isMobile ? Axis.vertical : Axis.horizontal,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Flexible(
-                flex: 2,
-                fit: FlexFit.loose,
-                child: Column(
+
+          // FIX RESPONSIVE MOBILE
+          isMobile
+              ? Column(
                   children: [
                     _ChartCard(isMobile: isMobile),
                     const SizedBox(height: 16),
                     _NotificationCard(isMobile: isMobile),
+                    const SizedBox(height: 16),
+                    _TrendingCard(isMobile: isMobile, key: trendingKey),
+                    const SizedBox(height: 16),
+                    _BestSellerCard(isMobile: isMobile),
+                  ],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: isTablet ? 3 : 2,
+                      child: Column(
+                        children: [
+                          _ChartCard(isMobile: isMobile),
+                          const SizedBox(height: 16),
+                          _NotificationCard(isMobile: isMobile),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        children: [
+                          _TrendingCard(isMobile: isMobile, key: trendingKey),
+                          const SizedBox(height: 16),
+                          _BestSellerCard(isMobile: isMobile),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              SizedBox(
-                width: isMobile ? 0 : 20,
-                height: isMobile ? 20 : 0,
-              ),
-              Flexible(
-                fit: FlexFit.loose,
-                child: Column(
-                  children: [
-                              _TrendingCard(isMobile: isMobile, key: trendingKey),
-                              const SizedBox(height: 16),
-                              _BestSellerCard(isMobile: isMobile),
-                            ],
-                          ),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -329,10 +340,7 @@ class _ComingSoonSection extends StatelessWidget {
                   const SizedBox(width: 8),
                   const Text(
                     'Real-Vibe Admin',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
@@ -489,13 +497,48 @@ class _RevenueSummaryCard extends StatelessWidget {
 }
 
 class _DashboardSummaryPanel extends StatelessWidget {
-  const _DashboardSummaryPanel({required this.isMobile});
+  const _DashboardSummaryPanel({
+    required this.isMobile,
+    required this.isTablet,
+  });
 
   final bool isMobile;
+  final bool isTablet;
 
   @override
   Widget build(BuildContext context) {
     if (isMobile) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: const [
+          Expanded(
+            flex: 5,
+            child: Column(
+              children: [
+                _DashboardMetricCard(
+                  icon: Icons.menu_book,
+                  label: 'Total Menu',
+                  value: '25',
+                ),
+                SizedBox(height: 12),
+                _DashboardMetricCard(
+                  icon: Icons.shopping_cart_outlined,
+                  label: 'Total Penjualan',
+                  value: '450',
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            flex: 4,
+            child: _RevenueSummaryCard(),
+          ),
+        ],
+      );
+    }
+
+    if (isTablet) {
       return Column(
         children: const [
           _DashboardMetricCard(
@@ -638,8 +681,7 @@ class _MiniCalendarCard extends StatelessWidget {
             builder: (context, constraints) {
               final maxWidth = constraints.maxWidth;
               const gap = 4.0;
-              final cellSize =
-                  ((maxWidth - gap * 6) / 7).clamp(16.0, 24.0);
+              final cellSize = ((maxWidth - gap * 6) / 7).clamp(16.0, 24.0);
               return Column(
                 children: [
                   Row(
@@ -681,8 +723,8 @@ class _MiniCalendarCard extends StatelessWidget {
                           color: d.isEmpty
                               ? Colors.transparent
                               : isToday
-                                  ? const Color(0xFF8F1A1A)
-                                  : const Color(0xFFF8EFE5),
+                              ? const Color(0xFF8F1A1A)
+                              : const Color(0xFFF8EFE5),
                           borderRadius: BorderRadius.circular(cellSize / 2),
                         ),
                         child: Text(
@@ -708,7 +750,6 @@ class _MiniCalendarCard extends StatelessWidget {
   }
 }
 
-
 class _ChartCard extends StatelessWidget {
   const _ChartCard({required this.isMobile});
 
@@ -725,7 +766,7 @@ class _ChartCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFCBB5AC), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(13), 
+            color: Colors.black.withAlpha(13),
             blurRadius: 18,
             offset: const Offset(0, 10),
           ),
@@ -1022,11 +1063,7 @@ class _BestSellerCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
             child: Row(
               children: const [
-                Icon(
-                  Icons.calendar_today,
-                  color: Color(0xFF8F1A1A),
-                  size: 18,
-                ),
+                Icon(Icons.calendar_today, color: Color(0xFF8F1A1A), size: 18),
                 SizedBox(width: 8),
                 Text(
                   'Kalender',
@@ -1043,10 +1080,7 @@ class _BestSellerCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
             child: const Align(
               alignment: Alignment.center,
-              child: SizedBox(
-                width: 260,
-                child: _MiniCalendarCard(),
-              ),
+              child: SizedBox(width: 260, child: _MiniCalendarCard()),
             ),
           ),
         ],

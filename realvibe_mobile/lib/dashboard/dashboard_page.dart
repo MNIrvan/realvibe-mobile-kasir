@@ -18,10 +18,17 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool isSidebarExpanded = true;
   DashboardSection selectedSection = DashboardSection.dashboard;
   final GlobalKey _trendingKey = GlobalKey();
   double? _trendingHeight;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedSection = DashboardSection.dashboard;
+  }
 
   void toggleSidebar() {
     setState(() {
@@ -41,19 +48,32 @@ class _DashboardPageState extends State<DashboardPage> {
     final box = context.findRenderObject() as RenderBox?;
     if (box == null) return;
     final newHeight = box.size.height;
-    if (_trendingHeight == null ||
-        (newHeight - _trendingHeight!).abs() > 1) {
+    if (_trendingHeight == null || (newHeight - _trendingHeight!).abs() > 1) {
       setState(() {
         _trendingHeight = newHeight;
       });
     }
   }
 
+  void _openDrawerSafely() {
+    final scaffoldState = _scaffoldKey.currentState;
+    if (scaffoldState == null) {
+      debugPrint('[ADMIN_DASHBOARD] drawer state unavailable');
+      return;
+    }
+    scaffoldState.openDrawer();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 900;
+    final isMobile = screenWidth < 768;
+    final isTablet = screenWidth >= 768 && screenWidth < 1200;
+    final useDrawer = isMobile || isTablet;
+    debugPrint(
+      '[ADMIN_DASHBOARD] build mobile=$isMobile tablet=$isTablet section=$selectedSection width=${screenWidth.toStringAsFixed(1)}',
+    );
     final sidebarWidth = isSidebarExpanded ? 260.0 : 80.0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -61,8 +81,9 @@ class _DashboardPageState extends State<DashboardPage> {
     });
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: const Color(0xFFFCF5ED),
-      drawer: isMobile
+      drawer: useDrawer
           ? Drawer(
               child: DashboardSidebar(
                 isCollapsed: false,
@@ -76,7 +97,7 @@ class _DashboardPageState extends State<DashboardPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (!isMobile)
+            if (!useDrawer)
               AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 width: sidebarWidth,
@@ -91,10 +112,11 @@ class _DashboardPageState extends State<DashboardPage> {
             Expanded(
               child: _DashboardBody(
                 isMobile: isMobile,
+                isTablet: isTablet,
                 screenWidth: screenWidth,
                 theme: theme,
                 selectedSection: selectedSection,
-                onOpenDrawer: () => Scaffold.of(context).openDrawer(),
+                onOpenDrawer: _openDrawerSafely,
                 trendingKey: _trendingKey,
                 trendingHeight: _trendingHeight,
               ),
@@ -109,6 +131,7 @@ class _DashboardPageState extends State<DashboardPage> {
 class _DashboardBody extends StatelessWidget {
   const _DashboardBody({
     required this.isMobile,
+    required this.isTablet,
     required this.screenWidth,
     required this.theme,
     required this.selectedSection,
@@ -118,6 +141,7 @@ class _DashboardBody extends StatelessWidget {
   });
 
   final bool isMobile;
+  final bool isTablet;
   final double screenWidth;
   final ThemeData theme;
   final DashboardSection selectedSection;
@@ -127,23 +151,26 @@ class _DashboardBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isMobile && selectedSection != DashboardSection.dashboard) {
+      debugPrint('[ADMIN_DASHBOARD] mobile section=$selectedSection');
+    }
     if (selectedSection == DashboardSection.menu) {
-      return MenuPage(isMobile: isMobile);
+      return MenuPage(isMobile: isMobile, onOpenDrawer: onOpenDrawer);
     }
     if (selectedSection == DashboardSection.jadwal) {
-      return KeretaPage(isMobile: isMobile);
+      return KeretaPage(isMobile: isMobile, onOpenDrawer: onOpenDrawer);
     }
     if (selectedSection == DashboardSection.informasi) {
-      return InformasiPage(isMobile: isMobile);
+      return InformasiPage(isMobile: isMobile, onOpenDrawer: onOpenDrawer);
     }
     if (selectedSection == DashboardSection.masukan) {
-      return MasukanPage(isMobile: isMobile);
+      return MasukanPage(isMobile: isMobile, onOpenDrawer: onOpenDrawer);
     }
     if (selectedSection == DashboardSection.laporan) {
-      return LaporanPage(isMobile: isMobile);
+      return LaporanPage(isMobile: isMobile, onOpenDrawer: onOpenDrawer);
     }
     if (selectedSection == DashboardSection.users) {
-      return UsersPage(isMobile: isMobile);
+      return UsersPage(isMobile: isMobile, onOpenDrawer: onOpenDrawer);
     }
 
     if (selectedSection != DashboardSection.dashboard) {
@@ -151,6 +178,52 @@ class _DashboardBody extends StatelessWidget {
         title: _sectionLabel(selectedSection),
         isMobile: isMobile,
         onOpenDrawer: onOpenDrawer,
+      );
+    }
+
+    if (isMobile) {
+      return ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        children: [
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.menu, color: Colors.black87),
+                onPressed: onOpenDrawer,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Real-Vibe Admin',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const _SafeDashboardSection(
+            sectionName: 'summary_panel',
+            child: _DashboardSummaryPanel(isMobile: true, isTablet: false),
+          ),
+          const SizedBox(height: 18),
+          const _SafeDashboardSection(
+            sectionName: 'chart_card',
+            child: _ChartCard(isMobile: true),
+          ),
+          const SizedBox(height: 16),
+          const _SafeDashboardSection(
+            sectionName: 'notification_card',
+            child: _NotificationCard(isMobile: true),
+          ),
+          const SizedBox(height: 16),
+          _SafeDashboardSection(
+            sectionName: 'trending_card',
+            child: _TrendingCard(isMobile: true, key: trendingKey),
+          ),
+          const SizedBox(height: 16),
+          const _SafeDashboardSection(
+            sectionName: 'calendar_card',
+            child: _BestSellerCard(isMobile: true),
+          ),
+        ],
       );
     }
 
@@ -168,26 +241,20 @@ class _DashboardBody extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(
-                      Icons.menu,
-                      color: Colors.black87,
-                    ),
+                    icon: const Icon(Icons.menu, color: Colors.black87),
                     onPressed: onOpenDrawer,
                   ),
                   const SizedBox(width: 8),
                   const Text(
                     'Real-Vibe Admin',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
             ),
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 16 : 24,
               vertical: 20,
             ),
             decoration: BoxDecoration(
@@ -204,10 +271,13 @@ class _DashboardBody extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                Wrap(
+                  runSpacing: 12,
+                  spacing: 12,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Expanded(
+                    SizedBox(
+                      width: isMobile ? double.infinity : 240,
                       child: Text(
                         'Welcome Admin !',
                         style: theme.textTheme.headlineSmall?.copyWith(
@@ -216,36 +286,31 @@ class _DashboardBody extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: SizedBox(
-                          width: isMobile ? screenWidth * 0.55 : 420,
-                          child: TextField(
-                            decoration: InputDecoration(
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 14,
-                                horizontal: 18,
-                              ),
-                              hintText: 'Telusuri disini',
-                              hintStyle: const TextStyle(
-                                color: Color(0xFF8A8A8A),
-                              ),
-                              prefixIcon: const Icon(
-                                Icons.menu,
-                                color: Color(0xFF8A8A8A),
-                              ),
-                              suffixIcon: const Icon(
-                                Icons.search,
-                                color: Color(0xFF8A8A8A),
-                              ),
-                              filled: true,
-                              fillColor: const Color(0xFFF5F1EE),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide.none,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
+                    SizedBox(
+                      width: isMobile
+                          ? double.infinity
+                          : (isTablet ? screenWidth * 0.4 : 420),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                            horizontal: 18,
+                          ),
+                          hintText: 'Telusuri disini',
+                          hintStyle: const TextStyle(color: Color(0xFF8A8A8A)),
+                          prefixIcon: const Icon(
+                            Icons.menu,
+                            color: Color(0xFF8A8A8A),
+                          ),
+                          suffixIcon: const Icon(
+                            Icons.search,
+                            color: Color(0xFF8A8A8A),
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFFF5F1EE),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.circular(14),
                           ),
                         ),
                       ),
@@ -256,16 +321,13 @@ class _DashboardBody extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          _DashboardSummaryPanel(isMobile: isMobile),
+          _DashboardSummaryPanel(isMobile: isMobile, isTablet: isTablet),
           const SizedBox(height: 24),
-          Flex(
-            direction: isMobile ? Axis.vertical : Axis.horizontal,
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Flexible(
-                flex: 2,
-                fit: FlexFit.loose,
+              Expanded(
+                flex: isTablet ? 3 : 2,
                 child: Column(
                   children: [
                     _ChartCard(isMobile: isMobile),
@@ -274,23 +336,86 @@ class _DashboardBody extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(
-                width: isMobile ? 0 : 20,
-                height: isMobile ? 20 : 0,
-              ),
-              Flexible(
-                fit: FlexFit.loose,
+              const SizedBox(width: 20),
+              Expanded(
+                flex: 2,
                 child: Column(
                   children: [
-                              _TrendingCard(isMobile: isMobile, key: trendingKey),
-                              const SizedBox(height: 16),
-                              _BestSellerCard(isMobile: isMobile),
-                            ],
-                          ),
+                    _TrendingCard(isMobile: isMobile, key: trendingKey),
+                    const SizedBox(height: 16),
+                    _BestSellerCard(isMobile: isMobile),
+                  ],
+                ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SafeDashboardSection extends StatelessWidget {
+  const _SafeDashboardSection({required this.sectionName, required this.child});
+
+  final String sectionName;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    try {
+      return child;
+    } catch (error, stackTrace) {
+      debugPrint(
+        '[ADMIN_DASHBOARD] failed section "$sectionName": $error\n$stackTrace',
+      );
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE4D1C7)),
+        ),
+        child: Text(
+          'Bagian "$sectionName" gagal dimuat.',
+          style: const TextStyle(
+            fontSize: 13,
+            color: Color(0xFF6A4E47),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+  }
+}
+
+class _DashboardSectionFallback extends StatelessWidget {
+  const _DashboardSectionFallback({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 120),
+
+      alignment: Alignment.center,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8EFE5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE4D1C7)),
+      ),
+      child: Text(
+        '$title belum bisa dimuat.',
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 13,
+          color: Color(0xFF6A4E47),
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -329,10 +454,7 @@ class _ComingSoonSection extends StatelessWidget {
                   const SizedBox(width: 8),
                   const Text(
                     'Real-Vibe Admin',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
@@ -380,16 +502,27 @@ class _DashboardMetricCard extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.compact = false,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final cardPadding = compact
+        ? const EdgeInsets.symmetric(horizontal: 12, vertical: 10)
+        : const EdgeInsets.symmetric(horizontal: 20, vertical: 14);
+    final iconBoxSize = compact ? 42.0 : 52.0;
+    final iconSize = compact ? 22.0 : 26.0;
+    final gap = compact ? 10.0 : 14.0;
+    final valueSize = compact ? 18.0 : 26.0;
+    final labelSize = compact ? 11.0 : 14.0;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      padding: cardPadding,
       decoration: BoxDecoration(
         color: const Color(0xFF8F1A1A),
         borderRadius: BorderRadius.circular(16),
@@ -404,36 +537,42 @@ class _DashboardMetricCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            height: 52,
-            width: 52,
+            height: iconBoxSize,
+            width: iconBoxSize,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: const Color(0xFF8F1A1A), size: 26),
+            child: Icon(icon, color: const Color(0xFF8F1A1A), size: iconSize),
           ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
+          SizedBox(width: gap),
+          Expanded(
+            child: FittedBox(
+              alignment: Alignment.centerLeft,
+              fit: BoxFit.scaleDown,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: valueSize,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: labelSize,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white70,
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -442,11 +581,14 @@ class _DashboardMetricCard extends StatelessWidget {
 }
 
 class _RevenueSummaryCard extends StatelessWidget {
-  const _RevenueSummaryCard();
+  const _RevenueSummaryCard({this.fitHeight = false});
+
+  final bool fitHeight;
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: fitHeight ? double.infinity : null,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -489,13 +631,55 @@ class _RevenueSummaryCard extends StatelessWidget {
 }
 
 class _DashboardSummaryPanel extends StatelessWidget {
-  const _DashboardSummaryPanel({required this.isMobile});
+  const _DashboardSummaryPanel({
+    required this.isMobile,
+    required this.isTablet,
+  });
 
   final bool isMobile;
+  final bool isTablet;
 
   @override
   Widget build(BuildContext context) {
     if (isMobile) {
+      return IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              flex: 1,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _DashboardMetricCard(
+                    icon: Icons.menu_book,
+                    label: 'Total Menu',
+                    value: '25',
+                    compact: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _DashboardMetricCard(
+                    icon: Icons.shopping_cart_outlined,
+                    label: 'Total Penjualan',
+                    value: '450',
+                    compact: true,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 1,
+              child: const SizedBox.expand(
+                child: _RevenueSummaryCard(fitHeight: true),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (isTablet) {
       return Column(
         children: const [
           _DashboardMetricCard(
@@ -638,8 +822,7 @@ class _MiniCalendarCard extends StatelessWidget {
             builder: (context, constraints) {
               final maxWidth = constraints.maxWidth;
               const gap = 4.0;
-              final cellSize =
-                  ((maxWidth - gap * 6) / 7).clamp(16.0, 24.0);
+              final cellSize = ((maxWidth - gap * 6) / 7).clamp(16.0, 24.0);
               return Column(
                 children: [
                   Row(
@@ -681,8 +864,8 @@ class _MiniCalendarCard extends StatelessWidget {
                           color: d.isEmpty
                               ? Colors.transparent
                               : isToday
-                                  ? const Color(0xFF8F1A1A)
-                                  : const Color(0xFFF8EFE5),
+                              ? const Color(0xFF8F1A1A)
+                              : const Color(0xFFF8EFE5),
                           borderRadius: BorderRadius.circular(cellSize / 2),
                         ),
                         child: Text(
@@ -708,7 +891,6 @@ class _MiniCalendarCard extends StatelessWidget {
   }
 }
 
-
 class _ChartCard extends StatelessWidget {
   const _ChartCard({required this.isMobile});
 
@@ -725,7 +907,7 @@ class _ChartCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFCBB5AC), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(13), 
+            color: Colors.black.withAlpha(13),
             blurRadius: 18,
             offset: const Offset(0, 10),
           ),
@@ -743,7 +925,23 @@ class _ChartCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          SizedBox(height: isMobile ? 260 : 300, child: const RevenueChart()),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final chartWidth = constraints.maxWidth;
+              if (!chartWidth.isFinite || chartWidth < 180) {
+                return const _DashboardSectionFallback(
+                  title: 'Grafik pendapatan',
+                );
+              }
+
+              return SizedBox(
+                height: isMobile ? 260 : 300,
+                child: const ClipRect(
+                  child: RepaintBoundary(child: RevenueChart()),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -1022,11 +1220,7 @@ class _BestSellerCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
             child: Row(
               children: const [
-                Icon(
-                  Icons.calendar_today,
-                  color: Color(0xFF8F1A1A),
-                  size: 18,
-                ),
+                Icon(Icons.calendar_today, color: Color(0xFF8F1A1A), size: 18),
                 SizedBox(width: 8),
                 Text(
                   'Kalender',
@@ -1043,10 +1237,7 @@ class _BestSellerCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
             child: const Align(
               alignment: Alignment.center,
-              child: SizedBox(
-                width: 260,
-                child: _MiniCalendarCard(),
-              ),
+              child: SizedBox(width: 260, child: _MiniCalendarCard()),
             ),
           ),
         ],
@@ -1054,3 +1245,4 @@ class _BestSellerCard extends StatelessWidget {
     );
   }
 }
+

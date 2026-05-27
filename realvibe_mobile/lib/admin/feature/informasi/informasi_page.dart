@@ -4,9 +4,14 @@ import 'package:flutter/material.dart';
 
 import '../../modal/form_informasi/form_informasi.dart';
 class InformasiPage extends StatelessWidget {
-  const InformasiPage({super.key, required this.isMobile});
+  const InformasiPage({
+    super.key,
+    required this.isMobile,
+    this.onOpenDrawer,
+  });
 
   final bool isMobile;
+  final VoidCallback? onOpenDrawer;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +23,7 @@ class InformasiPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _InformasiHeader(isMobile: isMobile),
+          _InformasiHeader(isMobile: isMobile, onOpenDrawer: onOpenDrawer),
           const SizedBox(height: 18),
           const _InformasiTitle(),
           const SizedBox(height: 12),
@@ -40,9 +45,10 @@ class InformasiPage extends StatelessWidget {
 }
 
 class _InformasiHeader extends StatelessWidget {
-  const _InformasiHeader({required this.isMobile});
+  const _InformasiHeader({required this.isMobile, this.onOpenDrawer});
 
   final bool isMobile;
+  final VoidCallback? onOpenDrawer;
 
   @override
   Widget build(BuildContext context) {
@@ -61,8 +67,13 @@ class _InformasiHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (isMobile)
-            const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
+          if (onOpenDrawer != null)
+            IconButton(
+              constraints: const BoxConstraints(),
+              padding: EdgeInsets.zero,
+              onPressed: onOpenDrawer,
+              icon: const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
+            ),
           if (isMobile) const SizedBox(width: 10),
           const Expanded(
             child: Text(
@@ -146,10 +157,15 @@ class _BannerBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final boardPadding = isMobile ? 14.0 : 22.0;
+    final bannerSpacing = isMobile ? 12.0 : 18.0;
+    final bannerRunSpacing = isMobile ? 12.0 : 16.0;
+    final actionButtonSize = isMobile ? 78.0 : 70.0;
+
     return Container(
       width: width,
-      height: max(360, width * 0.6),
-      padding: const EdgeInsets.all(22),
+      height: isMobile ? null : max(360, width * 0.6),
+      padding: EdgeInsets.all(boardPadding),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
@@ -166,12 +182,11 @@ class _BannerBoard extends StatelessWidget {
                   : availableWidth > 380
                       ? 2
                       : 1;
-              const spacing = 18.0;
               final cardWidth =
-                  (availableWidth - (columns - 1) * spacing) / columns;
+                  (availableWidth - (columns - 1) * bannerSpacing) / columns;
               return Wrap(
-                spacing: spacing,
-                runSpacing: 16,
+                spacing: bannerSpacing,
+                runSpacing: bannerRunSpacing,
                 children: [
                   _BannerCard(
                     imagePath: 'assets/images/banner1.png',
@@ -189,7 +204,7 @@ class _BannerBoard extends StatelessWidget {
               );
             },
           ),
-          const Spacer(),
+          SizedBox(height: isMobile ? 14 : 18),
           Align(
             alignment: Alignment.centerRight,
             child: InkWell(
@@ -199,13 +214,14 @@ class _BannerBoard extends StatelessWidget {
                   builder: (_) => const FormInformasi(),
                 );
               },
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(10),
               child: Container(
-                height: 70,
-                width: 70,
+                height: actionButtonSize,
+                width: actionButtonSize,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color(0xFF8F1A1A),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withAlpha(18),
@@ -216,13 +232,17 @@ class _BannerBoard extends StatelessWidget {
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.add_a_photo, color: Colors.white, size: 22),
-                    SizedBox(height: 4),
+                  children: [
+                    Icon(
+                      Icons.add_a_photo,
+                      color: Colors.white,
+                      size: isMobile ? 24 : 22,
+                    ),
+                    SizedBox(height: isMobile ? 6 : 4),
                     Text(
                       '+Tambah Foto',
                       style: TextStyle(
-                        fontSize: 9,
+                        fontSize: isMobile ? 10 : 9,
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),

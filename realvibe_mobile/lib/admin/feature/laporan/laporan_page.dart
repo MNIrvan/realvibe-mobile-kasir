@@ -6,9 +6,14 @@ import '../../modal/form_laporan_cetak/form_laporan_cetak.dart';
 enum LaporanFilter { tunai, nonTunai, uangKeluar, keseluruhan }
 
 class LaporanPage extends StatefulWidget {
-  const LaporanPage({super.key, required this.isMobile});
+  const LaporanPage({
+    super.key,
+    required this.isMobile,
+    this.onOpenDrawer,
+  });
 
   final bool isMobile;
+  final VoidCallback? onOpenDrawer;
 
   @override
   State<LaporanPage> createState() => _LaporanPageState();
@@ -17,6 +22,26 @@ class LaporanPage extends StatefulWidget {
 class _LaporanPageState extends State<LaporanPage> {
   LaporanFilter selected = LaporanFilter.tunai;
   final TextEditingController _searchController = TextEditingController();
+  DateTime? _selectedDate;
+
+  String? get _selectedDateText {
+    if (_selectedDate == null) return null;
+    final d = _selectedDate!;
+    final day = d.day.toString().padLeft(2, '0');
+    final month = d.month.toString().padLeft(2, '0');
+    return '$day/$month/${d.year}';
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null) return;
+    setState(() => _selectedDate = picked);
+  }
 
   @override
   void dispose() {
@@ -39,18 +64,30 @@ class _LaporanPageState extends State<LaporanPage> {
             isMobile: isMobile,
             controller: _searchController,
             onChanged: (_) => setState(() {}),
+            onOpenDrawer: widget.onOpenDrawer,
           ),
+          if (isMobile) ...[
+            const SizedBox(height: 12),
+            _HeaderSearch(
+              controller: _searchController,
+              onChanged: (_) => setState(() {}),
+            ),
+          ],
           const SizedBox(height: 18),
           _FilterTabs(
             isMobile: isMobile,
             selected: selected,
             onSelect: (value) => setState(() => selected = value),
+            onResetDateFilter: () => setState(() => _selectedDate = null),
           ),
           const SizedBox(height: 10),
           _ReportCard(
             isMobile: isMobile,
             selected: selected,
             searchQuery: _searchController.text,
+            selectedDateText: _selectedDateText,
+            onPickDate: _pickDate,
+            onResetDateFilter: () => setState(() => _selectedDate = null),
           ),
         ],
       ),
@@ -63,11 +100,13 @@ class _LaporanHeader extends StatelessWidget {
     required this.isMobile,
     required this.controller,
     required this.onChanged,
+    this.onOpenDrawer,
   });
 
   final bool isMobile;
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
+  final VoidCallback? onOpenDrawer;
 
   @override
   Widget build(BuildContext context) {
@@ -86,8 +125,13 @@ class _LaporanHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (isMobile)
-            const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
+          if (onOpenDrawer != null)
+            IconButton(
+              constraints: const BoxConstraints(),
+              padding: EdgeInsets.zero,
+              onPressed: onOpenDrawer,
+              icon: const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
+            ),
           if (isMobile) const SizedBox(width: 10),
           const Expanded(
             child: Text(
@@ -158,46 +202,143 @@ class _FilterTabs extends StatelessWidget {
     required this.isMobile,
     required this.selected,
     required this.onSelect,
+    required this.onResetDateFilter,
   });
 
   final bool isMobile;
   final LaporanFilter selected;
   final ValueChanged<LaporanFilter> onSelect;
+  final VoidCallback onResetDateFilter;
 
   @override
   Widget build(BuildContext context) {
+    if (isMobile) {
+      return Row(
+        children: [
+          Expanded(
+            child: _FilterDropdown(
+              selected: selected,
+              onChanged: onSelect,
+            ),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: onResetDateFilter,
+            borderRadius: BorderRadius.circular(10),
+            child: const Padding(
+              padding: EdgeInsets.all(6),
+              child: Icon(Icons.refresh, color: Color(0xFF8F1A1A)),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Row(
       children: [
-        _FilterTab(
-          label: 'Pembayaran Tunai',
-          icon: Icons.attach_money,
-          isActive: selected == LaporanFilter.tunai,
-          onTap: () => onSelect(LaporanFilter.tunai),
+        Expanded(
+          child: _FilterTab(
+            label: 'Pembayaran Tunai',
+            icon: Icons.attach_money,
+            isActive: selected == LaporanFilter.tunai,
+            isDesktopTablet: !isMobile,
+            onTap: () => onSelect(LaporanFilter.tunai),
+          ),
         ),
-        const SizedBox(width: 10),
-        _FilterTab(
-          label: 'Pembayaran Non Tunai',
-          icon: Icons.credit_card,
-          isActive: selected == LaporanFilter.nonTunai,
-          onTap: () => onSelect(LaporanFilter.nonTunai),
+        Expanded(
+          child: _FilterTab(
+            label: 'Pembayaran Non Tunai',
+            icon: Icons.credit_card,
+            isActive: selected == LaporanFilter.nonTunai,
+            isDesktopTablet: !isMobile,
+            onTap: () => onSelect(LaporanFilter.nonTunai),
+          ),
         ),
-        const SizedBox(width: 10),
-        _FilterTab(
-          label: 'Uang Keluar',
-          icon: Icons.logout,
-          isActive: selected == LaporanFilter.uangKeluar,
-          onTap: () => onSelect(LaporanFilter.uangKeluar),
+        Expanded(
+          child: _FilterTab(
+            label: 'Uang Keluar',
+            icon: Icons.logout,
+            isActive: selected == LaporanFilter.uangKeluar,
+            isDesktopTablet: !isMobile,
+            onTap: () => onSelect(LaporanFilter.uangKeluar),
+          ),
         ),
-        const SizedBox(width: 10),
-        _FilterTab(
-          label: 'Keseluruhan',
-          icon: Icons.task_alt,
-          isActive: selected == LaporanFilter.keseluruhan,
-          onTap: () => onSelect(LaporanFilter.keseluruhan),
+        Expanded(
+          child: _FilterTab(
+            label: 'Keseluruhan',
+            icon: Icons.task_alt,
+            isActive: selected == LaporanFilter.keseluruhan,
+            isDesktopTablet: !isMobile,
+            onTap: () => onSelect(LaporanFilter.keseluruhan),
+          ),
         ),
-        const Spacer(),
-        const Icon(Icons.refresh, color: Color(0xFF8F1A1A)),
+        InkWell(
+          onTap: onResetDateFilter,
+          borderRadius: BorderRadius.circular(10),
+          child: const Padding(
+            padding: EdgeInsets.all(6),
+            child: Icon(Icons.refresh, color: Color(0xFF8F1A1A)),
+          ),
+        ),
       ],
+    );
+  }
+}
+
+class _FilterDropdown extends StatelessWidget {
+  const _FilterDropdown({
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final LaporanFilter selected;
+  final ValueChanged<LaporanFilter> onChanged;
+
+  String _label(LaporanFilter filter) {
+    switch (filter) {
+      case LaporanFilter.tunai:
+        return 'Pembayaran Tunai';
+      case LaporanFilter.nonTunai:
+        return 'Pembayaran Non Tunai';
+      case LaporanFilter.uangKeluar:
+        return 'Uang Keluar';
+      case LaporanFilter.keseluruhan:
+        return 'Keseluruhan';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFD7C9C1)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<LaporanFilter>(
+          isExpanded: true,
+          value: selected,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded),
+          style: const TextStyle(
+            color: Color(0xFF3B1F1B),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+          items: LaporanFilter.values
+              .map(
+                (filter) => DropdownMenuItem<LaporanFilter>(
+                  value: filter,
+                  child: Text(_label(filter)),
+                ),
+              )
+              .toList(),
+          onChanged: (value) {
+            if (value != null) onChanged(value);
+          },
+        ),
+      ),
     );
   }
 }
@@ -208,40 +349,66 @@ class _FilterTab extends StatelessWidget {
     required this.icon,
     required this.isActive,
     required this.onTap,
+    this.isDesktopTablet = false,
   });
 
   final String label;
   final IconData icon;
   final bool isActive;
   final VoidCallback onTap;
+  final bool isDesktopTablet;
 
   @override
   Widget build(BuildContext context) {
     final color = isActive ? const Color(0xFF8F1A1A) : const Color(0xFF6F6561);
+
+    final labelRow = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ],
+    );
+
+    final underline = Container(
+      height: 3,
+      color: isActive ? const Color(0xFF8F1A1A) : Colors.transparent,
+    );
+
     return InkWell(
       onTap: onTap,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: color),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
+          if (isDesktopTablet)
+            Align(
+              alignment: Alignment.center,
+              child: IntrinsicWidth(child: labelRow),
+            )
+          else
+            labelRow,
           const SizedBox(height: 6),
-          Container(
-            height: 3,
-            width: 100,
-            color: isActive ? const Color(0xFF8F1A1A) : Colors.transparent,
-          ),
+          if (isDesktopTablet)
+            Align(
+              alignment: Alignment.center,
+              child: IntrinsicWidth(
+                child: SizedBox(width: double.infinity, child: underline),
+              ),
+            )
+          else
+            SizedBox(
+              width: 100,
+              child: underline,
+            ),
         ],
       ),
     );
@@ -253,11 +420,17 @@ class _ReportCard extends StatelessWidget {
     required this.isMobile,
     required this.selected,
     required this.searchQuery,
+    required this.selectedDateText,
+    required this.onPickDate,
+    required this.onResetDateFilter,
   });
 
   final bool isMobile;
   final LaporanFilter selected;
   final String searchQuery;
+  final String? selectedDateText;
+  final VoidCallback onPickDate;
+  final VoidCallback onResetDateFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -280,6 +453,9 @@ class _ReportCard extends StatelessWidget {
                 e.total.toLowerCase().contains(query) ||
                 e.tanggal.toLowerCase().contains(query);
           }).toList();
+    final dateFiltered = selectedDateText == null
+        ? filtered
+        : filtered.where((e) => e.tanggal == selectedDateText).toList();
 
     return Container(
       width: double.infinity,
@@ -291,12 +467,18 @@ class _ReportCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _ReportToolbar(selected: selected),
+          _ReportToolbar(
+            selected: selected,
+            selectedDateText: selectedDateText,
+            onPickDate: onPickDate,
+            onResetDateFilter: onResetDateFilter,
+            isMobile: isMobile,
+          ),
           const SizedBox(height: 12),
           if (selected == LaporanFilter.uangKeluar)
             const _EmptyState()
           else
-            _ReportTable(entries: filtered, isMobile: isMobile),
+            _ReportTable(entries: dateFiltered, isMobile: isMobile),
         ],
       ),
     );
@@ -304,22 +486,115 @@ class _ReportCard extends StatelessWidget {
 }
 
 class _ReportToolbar extends StatelessWidget {
-  const _ReportToolbar({required this.selected});
+  const _ReportToolbar({
+    required this.selected,
+    required this.selectedDateText,
+    required this.onPickDate,
+    required this.onResetDateFilter,
+    required this.isMobile,
+  });
 
   final LaporanFilter selected;
+  final String? selectedDateText;
+  final VoidCallback onPickDate;
+  final VoidCallback onResetDateFilter;
+  final bool isMobile;
 
   @override
   Widget build(BuildContext context) {
+    final reportTitle = selected == LaporanFilter.tunai
+        ? 'Transaksi Tunai'
+        : selected == LaporanFilter.nonTunai
+            ? 'Transaksi Non Tunai'
+            : selected == LaporanFilter.keseluruhan
+                ? 'Transaksi Keseluruhan'
+                : 'Uang Keluar';
+    final entries = selected == LaporanFilter.tunai
+        ? laporanTunai
+        : selected == LaporanFilter.nonTunai
+            ? laporanNonTunai
+            : selected == LaporanFilter.keseluruhan
+                ? laporanKeseluruhan()
+                : const <LaporanEntry>[];
+    final title = selected == LaporanFilter.tunai
+        ? 'Pembayaran Tunai'
+        : selected == LaporanFilter.nonTunai
+            ? 'Pembayaran Non Tunai'
+            : selected == LaporanFilter.keseluruhan
+                ? 'Keseluruhan'
+                : 'Uang Keluar';
+
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            reportTitle,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: Color(0xFF3B1F1B),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Text(
+                'Tanggal:',
+                style: TextStyle(fontSize: 11, color: Color(0xFF8F8079)),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: InkWell(
+                  onTap: onPickDate,
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFD5C7BE)),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      selectedDateText ?? 'Semua tanggal',
+                      style: const TextStyle(fontSize: 10),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              _ToolbarButton(
+                label: 'Filter',
+                color: const Color(0xFF1D4ED8),
+                icon: Icons.tune,
+                onTap: onResetDateFilter,
+              ),
+              const SizedBox(width: 6),
+              _ToolbarButton(
+                label: 'Cetak',
+                color: const Color(0xFF1D4ED8),
+                icon: Icons.print,
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => FormLaporanCetak(title: title, entries: entries),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
-          selected == LaporanFilter.tunai
-              ? 'Transaksi Tunai'
-              : selected == LaporanFilter.nonTunai
-                  ? 'Transaksi Non Tunai'
-                  : selected == LaporanFilter.keseluruhan
-                      ? 'Transaksi Keseluruhan'
-                      : 'Uang Keluar',
+          reportTitle,
           style: const TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 14,
@@ -332,15 +607,19 @@ class _ReportToolbar extends StatelessWidget {
           style: TextStyle(fontSize: 11, color: Color(0xFF8F8079)),
         ),
         const SizedBox(width: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            border: Border.all(color: const Color(0xFFD5C7BE)),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: const Text(
-            '22/7/2024',
-            style: TextStyle(fontSize: 10),
+        InkWell(
+          onTap: onPickDate,
+          borderRadius: BorderRadius.circular(6),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              border: Border.all(color: const Color(0xFFD5C7BE)),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              selectedDateText ?? '22/7/2024',
+              style: const TextStyle(fontSize: 10),
+            ),
           ),
         ),
         const SizedBox(width: 8),
@@ -348,33 +627,17 @@ class _ReportToolbar extends StatelessWidget {
           label: 'Filter',
           color: const Color(0xFF1D4ED8),
           icon: Icons.tune,
+          onTap: onResetDateFilter,
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 8),
         _ToolbarButton(
           label: 'Cetak',
           color: const Color(0xFF1D4ED8),
           icon: Icons.print,
           onTap: () {
-            final entries = selected == LaporanFilter.tunai
-                ? laporanTunai
-                : selected == LaporanFilter.nonTunai
-                    ? laporanNonTunai
-                    : selected == LaporanFilter.keseluruhan
-                        ? laporanKeseluruhan()
-                        : const <LaporanEntry>[];
-            final title = selected == LaporanFilter.tunai
-                ? 'Pembayaran Tunai'
-                : selected == LaporanFilter.nonTunai
-                    ? 'Pembayaran Non Tunai'
-                    : selected == LaporanFilter.keseluruhan
-                        ? 'Keseluruhan'
-                        : 'Uang Keluar';
             showDialog(
               context: context,
-              builder: (_) => FormLaporanCetak(
-                title: title,
-                entries: entries,
-              ),
+              builder: (_) => FormLaporanCetak(title: title, entries: entries),
             );
           },
         ),
@@ -434,7 +697,17 @@ class _ReportTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    if (entries.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Text(
+          'Tidak ada data pada filter saat ini.',
+          style: TextStyle(fontSize: 11, color: Color(0xFF8F8079)),
+        ),
+      );
+    }
+
+    final tableContent = Column(
       children: [
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
@@ -503,6 +776,13 @@ class _ReportTable extends StatelessWidget {
           ),
         ),
       ],
+    );
+
+    if (!isMobile) return tableContent;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SizedBox(width: 760, child: tableContent),
     );
   }
 }

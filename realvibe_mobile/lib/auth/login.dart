@@ -17,6 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isPasswordObscured = true;
 
   // Fungsi untuk memproses login ke Laravel
   Future<void> _login() async {
@@ -61,6 +62,7 @@ class _LoginPageState extends State<LoginPage> {
         final String role = (data['data'] != null && data['data']['role'] != null)
             ? data['data']['role'].toString().toLowerCase()
             : '';
+        debugPrint('[LOGIN] success role="$role"');
 
         Widget targetPage;
         if (role == 'kasir') {
@@ -74,6 +76,9 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         // Login berhasil, arahkan ke dashboard sesuai role
+        debugPrint(
+          '[LOGIN] navigate to ${targetPage.runtimeType} from LoginPage',
+        );
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => targetPage),
         );
@@ -125,6 +130,10 @@ class _LoginPageState extends State<LoginPage> {
                             usernameController: _usernameController,
                             passwordController: _passwordController,
                             isLoading: _isLoading,
+                            isPasswordObscured: _isPasswordObscured,
+                            onTogglePasswordVisibility: () => setState(
+                              () => _isPasswordObscured = !_isPasswordObscured,
+                            ),
                             onLogin: _login,
                           ),
                         ],
@@ -138,6 +147,10 @@ class _LoginPageState extends State<LoginPage> {
                               usernameController: _usernameController,
                               passwordController: _passwordController,
                               isLoading: _isLoading,
+                              isPasswordObscured: _isPasswordObscured,
+                              onTogglePasswordVisibility: () => setState(
+                                () => _isPasswordObscured = !_isPasswordObscured,
+                              ),
                               onLogin: _login,
                             )
                           ),
@@ -251,6 +264,8 @@ class _LoginFormSection extends StatelessWidget {
     required this.usernameController,
     required this.passwordController,
     required this.isLoading,
+    required this.isPasswordObscured,
+    required this.onTogglePasswordVisibility,
     required this.onLogin,
   });
 
@@ -258,6 +273,8 @@ class _LoginFormSection extends StatelessWidget {
   final TextEditingController usernameController;
   final TextEditingController passwordController;
   final bool isLoading;
+  final bool isPasswordObscured;
+  final VoidCallback onTogglePasswordVisibility;
   final VoidCallback onLogin;
 
   @override
@@ -311,8 +328,15 @@ class _LoginFormSection extends StatelessWidget {
           _LoginField(
             label: 'Password',
             hintText: 'Password',
-            obscureText: true,
+            obscureText: isPasswordObscured,
             controller: passwordController,
+            suffixIcon: IconButton(
+              onPressed: onTogglePasswordVisibility,
+              icon: Icon(
+                isPasswordObscured ? Icons.visibility_off : Icons.visibility,
+                color: const Color(0xFF7B7069),
+              ),
+            ),
           ),
           const SizedBox(height: 24),
           Center(
@@ -356,12 +380,14 @@ class _LoginField extends StatelessWidget {
     required this.hintText,
     required this.controller,
     this.obscureText = false,
+    this.suffixIcon,
   });
 
   final String label;
   final String hintText;
   final TextEditingController controller;
   final bool obscureText;
+  final Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -388,6 +414,7 @@ class _LoginField extends StatelessWidget {
               vertical: 16,
               horizontal: 18,
             ),
+            suffixIcon: suffixIcon,
             border: OutlineInputBorder(
               borderSide: BorderSide.none,
               borderRadius: BorderRadius.circular(14),
