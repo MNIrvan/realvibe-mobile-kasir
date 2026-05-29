@@ -4,7 +4,7 @@ import 'package:excel/excel.dart' as ex;
 import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
 
-import '../../../data/laporan_data.dart';
+import '../../feature/laporan/laporan_model.dart';
 
 class FormLaporanCetak extends StatelessWidget {
   const FormLaporanCetak({
@@ -14,7 +14,7 @@ class FormLaporanCetak extends StatelessWidget {
   });
 
   final String title;
-  final List<LaporanEntry> entries;
+  final List<LaporanModel> entries;
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +138,7 @@ class FormLaporanCetak extends StatelessWidget {
     );
   }
 
-  Future<void> _downloadExcel(String title, List<LaporanEntry> entries) async {
+  Future<void> _downloadExcel(String title, List<LaporanModel> entries) async {
     final excel = ex.Excel.createExcel();
     final sheet = excel['Laporan'];
     sheet.appendRow([
@@ -229,7 +229,7 @@ class _SummaryItem extends StatelessWidget {
 class _ExcelTable extends StatelessWidget {
   const _ExcelTable({required this.entries});
 
-  final List<LaporanEntry> entries;
+  final List<LaporanModel> entries;
 
   @override
   Widget build(BuildContext context) {

@@ -5,8 +5,17 @@ import 'package:http/http.dart' as http;
 
 import 'kereta_model.dart';
 
+import 'package:flutter/foundation.dart';
+
 class KeretaService {
-  static const String _baseUrl = 'http://127.0.0.1:8000/api';
+  static String get _baseUrl {
+    final host = kIsWeb
+        ? '127.0.0.1'
+        : defaultTargetPlatform == TargetPlatform.android
+            ? '10.0.2.2'
+            : '127.0.0.1';
+    return 'http://$host:8000/api';
+  }
 
   static Future<KeretaInfo?> fetchFirstKereta() async {
     final response = await http.get(

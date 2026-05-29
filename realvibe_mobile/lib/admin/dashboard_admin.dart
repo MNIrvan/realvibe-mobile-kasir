@@ -1,5 +1,7 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
+import 'package:http/http.dart' as http;
 import '../admin/feature/kereta/kereta_page.dart';
 import '../admin/feature/masukan/masukan_page.dart';
 import '../admin/feature/menu/menu_page.dart';
@@ -450,7 +452,8 @@ class _DashboardMetricCard extends StatelessWidget {
 }
 
 class _RevenueSummaryCard extends StatelessWidget {
-  const _RevenueSummaryCard();
+  const _RevenueSummaryCard({required this.pendapatan});
+  final int pendapatan;
 
   @override
   Widget build(BuildContext context) {
@@ -470,20 +473,20 @@ class _RevenueSummaryCard extends StatelessWidget {
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Icon(Icons.currency_exchange, color: Color(0xFF8F1A1A), size: 38),
-          SizedBox(height: 8),
+        children: [
+          const Icon(Icons.currency_exchange, color: Color(0xFF8F1A1A), size: 38),
+          const SizedBox(height: 8),
           Text(
-            'Rp. 1.699.000',
-            style: TextStyle(
+            'Rp. ${pendapatan.toString()}',
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
               color: Color(0xFF351B1B),
             ),
           ),
-          SizedBox(height: 2),
-          Text(
-            'Total Pendapatan',
+          const SizedBox(height: 2),
+          const Text(
+            'Total Pendapatan (Hari Ini)',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -502,8 +505,58 @@ class _DashboardSummaryPanel extends StatelessWidget {
     required this.isTablet,
   });
 
+class _DashboardSummaryPanel extends StatefulWidget {
+  const _DashboardSummaryPanel({required this.isMobile});
   final bool isMobile;
   final bool isTablet;
+
+  @override
+  State<_DashboardSummaryPanel> createState() => _DashboardSummaryPanelState();
+}
+
+class _DashboardSummaryPanelState extends State<_DashboardSummaryPanel> {
+  int totalPenjualanHariIni = 0;
+  int totalPendapatanHariIni = 0;
+  String totalMenu = '0';
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSummary();
+  }
+
+  Future<void> _fetchSummary() async {
+    try {
+      final host = kIsWeb
+          ? '127.0.0.1'
+          : defaultTargetPlatform == TargetPlatform.android
+              ? '10.0.2.2'
+              : '127.0.0.1';
+      final url = Uri.parse('http://$host:8000/api/admin/dashboard/summary');
+      
+      final response = await http.get(url, headers: {
+        'Accept': 'application/json',
+      }).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            totalPenjualanHariIni = data['total_penjualan'] ?? 0;
+            totalPendapatanHariIni = data['total_pendapatan'] ?? 0;
+            totalMenu = (data['total_menu'] ?? 0).toString();
+            isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) setState(() => isLoading = false);
+      // print('Error fetching summary: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -539,21 +592,22 @@ class _DashboardSummaryPanel extends StatelessWidget {
     }
 
     if (isTablet) {
+    if (widget.isMobile) {
       return Column(
-        children: const [
+        children: [
           _DashboardMetricCard(
             icon: Icons.menu_book,
             label: 'Total Menu',
-            value: '25',
+            value: totalMenu, 
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           _DashboardMetricCard(
             icon: Icons.shopping_cart_outlined,
             label: 'Total Penjualan',
-            value: '450',
+            value: totalPenjualanHariIni.toString(),
           ),
-          SizedBox(height: 12),
-          _RevenueSummaryCard(),
+          const SizedBox(height: 12),
+          _RevenueSummaryCard(pendapatan: totalPendapatanHariIni),
         ],
       );
     }
@@ -567,24 +621,24 @@ class _DashboardSummaryPanel extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE0C9BC)),
       ),
       child: Row(
-        children: const [
+        children: [
           Expanded(
             child: _DashboardMetricCard(
               icon: Icons.menu_book,
               label: 'Total Menu',
-              value: '25',
+              value: totalMenu,
             ),
           ),
-          SizedBox(width: 20),
+          const SizedBox(width: 20),
           Expanded(
             child: _DashboardMetricCard(
               icon: Icons.shopping_cart_outlined,
-              label: 'Total Penjualan',
-              value: '450',
+              label: 'Penjualan (Hari ini)',
+              value: totalPenjualanHariIni.toString(),
             ),
           ),
-          SizedBox(width: 20),
-          Expanded(child: _RevenueSummaryCard()),
+          const SizedBox(width: 20),
+          Expanded(child: _RevenueSummaryCard(pendapatan: totalPendapatanHariIni)),
         ],
       ),
     );

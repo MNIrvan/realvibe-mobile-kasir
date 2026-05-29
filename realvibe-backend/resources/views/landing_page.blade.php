@@ -238,7 +238,7 @@ $cart = session('cart', []);
         </div>
     </div>
 
-    <a href="https://wa.me/628123456789" target="_blank" class="wa-float-btn">
+    <a href="https://wa.me/6282144851960" target="_blank" class="wa-float-btn">
         <i class="fab fa-whatsapp"></i>
     </a>
 
@@ -351,12 +351,28 @@ $cart = session('cart', []);
                 <h4 class="fw-bold mt-2">Hai, Customer!</h4>
                 <p class="small opacity-75">Yuk cek jadwal kereta, jangan sampai kamu ketinggalan momennya</p>
             </div>
-            <div style="margin-top: -100px; padding: 0 25px; text-align: center; position: relative; z-index: 5;">
-                <div style="background: white; padding: 10px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: inline-block; width: 100%;">
-                    <img src="{{ asset('/images/jadwal_kereta.png') }}" style="width: 100%; border-radius: 10px;" alt="Jadwal Kereta" onerror="this.src='https://via.placeholder.com/600x800?text=Gambar+Jadwal+Kereta'">
+            <div style="margin-top: -80px; padding: 0 15px; position: relative; z-index: 5;">
+                @foreach($jadwal_kereta as $j)
+                <div class="card mb-3 border-0" style="border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-danger rounded-pill px-3">{{ $j['waktu'] }}</span>
+                            <small class="text-muted fw-bold">{{ date('d M Y', strtotime($j['tanggal'])) }}</small>
+                        </div>
+                        <h6 class="fw-bold mb-1"><i class="fas fa-route text-muted me-2"></i>{{ $j['rute'] }}</h6>
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                            <div>
+                                <small class="text-muted d-block">Sisa Kuota</small>
+                                <strong class="{{ $j['sisa'] == 0 ? 'text-danger' : 'text-success' }}">{{ $j['sisa'] }} Kursi</strong>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" {{ $j['sisa'] == 0 ? 'disabled' : '' }} style="border-radius: 10px;">
+                                {{ $j['sisa'] == 0 ? 'Penuh' : 'Pilih Jadwal' }}
+                            </button>
+                        </div>
+                    </div>
                 </div>
+                @endforeach
             </div>
-            <div style="margin-top: 20px; text-align: center; opacity: 0.1;"><i class="fas fa-train fa-5x"></i></div>
 
         @elseif($page == 'reservasi')
             <div class="p-3">
@@ -365,20 +381,48 @@ $cart = session('cart', []);
                     <div class="col-6">
                         <div class="card card-custom p-3 text-center">
                             <i class="fas fa-chair text-danger mb-2"></i>
-                            <h4 class="fw-bold mb-0">12</h4>
+                            <h4 class="fw-bold mb-0">{{ $meja_tersedia ?? 0 }}</h4>
                             <small class="text-muted" style="font-size: 0.7rem;">Meja Tersedia</small>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="card card-custom p-3 text-center">
                             <i class="fas fa-users text-primary mb-2"></i>
-                            <h4 class="fw-bold mb-0">5</h4>
+                            <h4 class="fw-bold mb-0">{{ count($reservasi_history ?? []) }}</h4>
                             <small class="text-muted" style="font-size: 0.7rem;">Booking Hari Ini</small>
                         </div>
                     </div>
                 </div>
-                <div class="mt-4">
-                    <button class="btn btn-danger w-100 py-3 fw-bold shadow-sm" style="border-radius: 15px;">BUAT RESERVASI MEJA</button>
+
+                @if(session('success'))
+                    <div class="alert alert-success mt-3 shadow-sm border-0" style="border-radius: 15px;">{{ session('success') }}</div>
+                @endif
+
+                <div class="mt-4 card card-custom p-3">
+                    <form action="{{ route('booking.meja') }}" method="POST" target="_blank">
+                        @csrf
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Nama Lengkap</label>
+                            <input type="text" name="nama" class="form-control bg-light border-0 py-2" required placeholder="Masukkan nama...">
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Tanggal</label>
+                                <input type="date" name="tanggal" class="form-control bg-light border-0 py-2" required value="{{ date('Y-m-d') }}" min="{{ date('Y-m-d') }}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Waktu</label>
+                                <input type="time" name="waktu" class="form-control bg-light border-0 py-2" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Jumlah Orang</label>
+                            <input type="number" name="jumlah_orang" class="form-control bg-light border-0 py-2" required min="1" max="10" placeholder="Maks 10 org">
+                        </div>
+                        <button type="submit" class="btn w-100 py-3 fw-bold text-white shadow-sm" style="border-radius: 15px; background-color: var(--brand-orange);" {{ $meja_tersedia <= 0 ? 'disabled' : '' }}>
+                            {{ $meja_tersedia <= 0 ? 'MEJA PENUH' : 'BUAT RESERVASI' }}
+                        </button>
+                    </form>
                 </div>
             </div>
         @endif
@@ -458,11 +502,11 @@ $cart = session('cart', []);
                     </div>
                     <div class="mb-3">
                         <label class="form-label-small">Catatan Pesanan</label>
-                        <input type="text" class="form-control input-gray-custom" placeholder="Contoh: Pedas ya...">
+                        <input type="text" id="order-notes" class="form-control input-gray-custom" placeholder="Contoh: Pedas ya...">
                     </div>
                     <div class="mb-3">
                         <label class="form-label-small">Nama Pemesan</label>
-                        <input type="text" class="form-control input-gray-custom" placeholder="Masukkan nama Anda">
+                        <input type="text" id="order-name" class="form-control input-gray-custom" placeholder="Masukkan nama Anda">
                     </div>
                     <label class="form-label-small mb-2">Metode Pembayaran</label>
                     <div class="d-flex gap-3 mb-4">
@@ -594,12 +638,36 @@ $cart = session('cart', []);
     });
 
     document.getElementById('btn-submit-order').addEventListener('click', function() {
-        const checkoutModal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
-        if(checkoutModal) checkoutModal.hide();
-        setTimeout(() => {
-            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-            successModal.show();
-        }, 500);
+        const btn = this;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memproses...';
+        btn.disabled = true;
+
+        const nama = document.getElementById('order-name').value;
+        const catatan = document.getElementById('order-notes').value;
+        const paymentActive = document.querySelector('.payment-option.active');
+        const metode_pembayaran = paymentActive ? paymentActive.innerText.trim() : 'TUNAI';
+        
+        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        fetch('{{ route("checkout.process") }}', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token 
+            },
+            body: JSON.stringify({ nama_pemesan: nama, catatan: catatan, metode_pembayaran: metode_pembayaran })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                const checkoutModal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+                if(checkoutModal) checkoutModal.hide();
+                setTimeout(() => {
+                    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                    successModal.show();
+                }, 500);
+            }
+        });
     });
 
     function selectPayment(el) {

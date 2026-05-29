@@ -1,8 +1,10 @@
 import 'dart:math';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../modal/form_informasi/form_informasi.dart';
+import 'informasi_model.dart';
+import 'informasi_service.dart';
 class InformasiPage extends StatelessWidget {
   const InformasiPage({
     super.key,
@@ -146,7 +148,7 @@ class _InformasiTitle extends StatelessWidget {
   }
 }
 
-class _BannerBoard extends StatelessWidget {
+class _BannerBoard extends StatefulWidget {
   const _BannerBoard({
     required this.isMobile,
     required this.width,
@@ -154,6 +156,53 @@ class _BannerBoard extends StatelessWidget {
 
   final bool isMobile;
   final double width;
+
+  @override
+  State<_BannerBoard> createState() => _BannerBoardState();
+}
+
+class _BannerBoardState extends State<_BannerBoard> {
+  final InformasiService _service = InformasiService();
+  List<InformasiModel> _informasi = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchInformasi();
+  }
+
+  Future<void> _fetchInformasi() async {
+    try {
+      final data = await _service.getInformasi();
+      setState(() {
+        _informasi = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _toggleStatus(InformasiModel item) async {
+    try {
+      await _service.toggleStatus(item.id);
+      _fetchInformasi();
+    } catch (e) {
+      debugPrint('Failed to toggle: $e');
+    }
+  }
+
+  String _getImageUrl(String path) {
+    if (path.isEmpty) return '';
+    if (path.startsWith('http')) return path;
+    final host = kIsWeb
+        ? '127.0.0.1'
+        : defaultTargetPlatform == TargetPlatform.android
+            ? '10.0.2.2'
+            : '127.0.0.1';
+    return 'http://$host:8000/storage/$path';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,6 +215,9 @@ class _BannerBoard extends StatelessWidget {
       width: width,
       height: isMobile ? null : max(360, width * 0.6),
       padding: EdgeInsets.all(boardPadding),
+      width: widget.width,
+      height: max(360, widget.width * 0.6),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
@@ -174,7 +226,9 @@ class _BannerBoard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          LayoutBuilder(
+          _isLoading 
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF8F1A1A)))
+              : LayoutBuilder(
             builder: (context, constraints) {
               final availableWidth = constraints.maxWidth;
               final columns = availableWidth > 560
@@ -201,6 +255,14 @@ class _BannerBoard extends StatelessWidget {
                     width: cardWidth,
                   ),
                 ],
+                spacing: spacing,
+                runSpacing: 16,
+                children: _informasi.map((item) => _BannerCard(
+                  imageUrl: _getImageUrl(item.gambar),
+                  width: cardWidth,
+                  isActive: item.isActive,
+                  onToggle: () => _toggleStatus(item),
+                )).toList(),
               );
             },
           ),
@@ -260,28 +322,50 @@ class _BannerBoard extends StatelessWidget {
 
 class _BannerCard extends StatelessWidget {
   const _BannerCard({
-    required this.imagePath,
+    required this.imageUrl,
     required this.width,
+    required this.isActive,
+    required this.onToggle,
   });
 
-  final String imagePath;
+  final String imageUrl;
   final double width;
+  final bool isActive;
+  final VoidCallback onToggle;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: width * 0.55,
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFB88478), width: 1),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(6),
-        child: Image.asset(imagePath, fit: BoxFit.cover),
-      ),
+    return Column(
+      children: [
+        Container(
+          width: width,
+          height: width * 0.55,
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFB88478), width: 1),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: imageUrl.isEmpty 
+              ? const Center(child: Icon(Icons.image_not_supported, color: Colors.grey))
+              : Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.error)),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(isActive ? 'Aktif' : 'Nonaktif', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            Switch(
+              value: isActive,
+              onChanged: (_) => onToggle(),
+              activeColor: const Color(0xFF8F1A1A),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

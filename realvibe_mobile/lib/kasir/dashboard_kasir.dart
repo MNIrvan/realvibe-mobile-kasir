@@ -1,32 +1,190 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
-class RevenueDashboard extends StatelessWidget {
+class RevenueDashboard extends StatefulWidget {
   const RevenueDashboard({super.key});
 
-  // Konstanta Warna untuk konsistensi UI/UX
+  @override
+  State<RevenueDashboard> createState() => _RevenueDashboardState();
+}
+
+class _RevenueDashboardState extends State<RevenueDashboard> {
   static const Color primaryMaroon = Color(0xFFA62A1B);
   static const Color darkCard = Color(0xFF632117);
   static const Color bgKrem = Color(0xFFF7EFE5);
 
+  Timer? _timer;
+
+  // Data pesanan simulasi dari web (1800 detik = 30 menit)
+  List<Map<String, dynamic>> incomingOrders = [
+    {
+      "id": "#RV-001",
+      "name": "Budi Haryono",
+      "total": 60000,
+      "items": [
+        {"name": "2x Mie Goreng", "price": "Rp 30.000"},
+        {"name": "1x Es Teh", "price": "Rp 5.000"}
+      ],
+      "timeRemaining": 1800, 
+    },
+    {
+      "id": "#RV-002",
+      "name": "Siti Aminah",
+      "total": 20000,
+      "items": [
+        {"name": "2x Tahu Crispy", "price": "Rp 20.000"}
+      ],
+      "timeRemaining": 60, // Sisa 1 menit (untuk testing hilang otomatis)
+    }
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startCountdown();
+  }
+
+  void _startCountdown() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      setState(() {
+        // Hapus otomatis pesanan yang waktunya habis (0 detik)
+        incomingOrders.removeWhere((order) => order['timeRemaining'] <= 0);
+        
+        // Kurangi waktu untuk pesanan yang masih ada
+        for (var order in incomingOrders) {
+          if (order['timeRemaining'] > 0) {
+            order['timeRemaining']--;
+          }
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  // --- FUNGSI FORMAT WAKTU ---
+  String _formatTime(int seconds) {
+    int minutes = seconds ~/ 60;
+    int remainingSeconds = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  // --- LOGIKA KASIR (POS) & PEMBAYARAN ---
+  void _tampilkanModalPembayaran(Map<String, dynamic> orderDetails) {
+    TextEditingController uangMasukController = TextEditingController();
+    int grandTotal = orderDetails['total'] ?? 0;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            int uangMasuk = int.tryParse(uangMasukController.text.replaceAll('.', '')) ?? 0;
+            int kembalian = uangMasuk - grandTotal;
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Text("Proses Pembayaran", style: TextStyle(fontWeight: FontWeight.bold)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Pesanan: ${orderDetails['id']} - ${orderDetails['name']}"),
+                    const SizedBox(height: 10),
+                    const Divider(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("Grand Total", style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text("Rp $grandTotal", style: const TextStyle(fontWeight: FontWeight.bold, color: primaryMaroon, fontSize: 18)),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    const Text("Uang Masuk (Rp)", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    TextField(
+                      controller: uangMasukController,
+                      keyboardType: TextInputType.number,
+                      onChanged: (val) {
+                        setModalState(() {});
+                      },
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.grey[200],
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("Kembalian"),
+                        Text(
+                          kembalian < 0 ? "Uang Kurang!" : "Rp $kembalian",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold, 
+                            color: kembalian < 0 ? Colors.red : Colors.green,
+                            fontSize: 16
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: primaryMaroon, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                  onPressed: kembalian < 0 ? null : () {
+                    // Berhasil dibayar, hapus dari antrean
+                    setState(() {
+                      incomingOrders.removeWhere((o) => o['id'] == orderDetails['id']);
+                    });
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Pembayaran Berhasil!")));
+                  },
+                  child: const Text("Selesaikan Pembayaran"),
+                ),
+              ],
+            );
+          }
+        );
+      }
+    );
+  }
+
+  void _tolakPesanan(String id) {
+    setState(() {
+      incomingOrders.removeWhere((order) => order['id'] == id);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Pesanan $id ditolak.")));
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Menggunakan LayoutBuilder agar responsif
     return Scaffold(
       backgroundColor: bgKrem,
       appBar: _buildModernAppBar(),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          // Cek jika layar lebar (Tablet/Desktop mode) atau sempit (Mobile)
           bool isMobile = constraints.maxWidth < 800;
-
           return AnimationLimiter(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: isMobile 
-                ? Column(children: _buildContent(context)) // Tampilan tumpuk untuk HP
-                : Row( // Tampilan samping untuk Tablet/Web
+                ? Column(children: _buildContent(context)) 
+                : Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(flex: 5, child: Column(children: _buildLeftSection())),
@@ -41,7 +199,6 @@ class RevenueDashboard extends StatelessWidget {
     );
   }
 
-  // --- APPBAR MODERN ---
   PreferredSizeWidget _buildModernAppBar() {
     return AppBar(
       elevation: 0,
@@ -57,18 +214,22 @@ class RevenueDashboard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Pendapatan',
-                    style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Pendapatan', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
-                  _buildUserBadge('Adinda dian'),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white30)),
+                    child: Row(
+                      children: const [
+                        CircleAvatar(radius: 4, backgroundColor: Colors.orangeAccent),
+                        SizedBox(width: 6),
+                        Text('Kasir Aktif', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  )
                 ],
               ),
-              const Text(
-                'Real-Vibe',
-                style: TextStyle(color: Colors.white24, fontSize: 28, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic),
-              )
+              const Text('Real-Vibe', style: TextStyle(color: Colors.white24, fontSize: 28, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic))
             ],
           ),
         ),
@@ -76,31 +237,8 @@ class RevenueDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildUserBadge(String name) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white30),
-      ),
-      child: Row(
-        children: [
-          const CircleAvatar(radius: 4, backgroundColor: Colors.orangeAccent),
-          const SizedBox(width: 6),
-          Text(name, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
-        ],
-      ),
-    );
-  }
-
-  // --- LOGIC TATA LETAK ---
   List<Widget> _buildContent(BuildContext context) {
-    return [
-      ..._buildLeftSection(),
-      const SizedBox(height: 25),
-      ..._buildRightSection(),
-    ];
+    return [..._buildLeftSection(), const SizedBox(height: 25), ..._buildRightSection()];
   }
 
   List<Widget> _buildLeftSection() {
@@ -119,16 +257,17 @@ class RevenueDashboard extends StatelessWidget {
       const SizedBox(height: 30),
       _animateWidget(const Align(
         alignment: Alignment.centerLeft,
-        child: Text('Pesanan Masuk', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: darkCard)),
+        child: Text('Antrean Pesanan Web', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: darkCard)),
       )),
       const SizedBox(height: 15),
-      _animateWidget(_buildOrderCard("#RV-001", "Budi Haryono", "Rp 60.000")),
-      const SizedBox(height: 15),
-      _animateWidget(_buildOrderCard("#RV-002", "Budi Hariyadi", "Rp 30.000")),
+      if (incomingOrders.isEmpty)
+        _animateWidget(const Padding(
+          padding: EdgeInsets.all(20),
+          child: Text("Tidak ada pesanan masuk.", style: TextStyle(color: Colors.grey)),
+        )),
+      ...incomingOrders.map((order) => _animateWidget(_buildOrderCard(order))).toList(),
     ];
   }
-
-  // --- WIDGET KOMPONEN ---
 
   Widget _buildDateHeader() {
     return Container(
@@ -138,11 +277,11 @@ class RevenueDashboard extends StatelessWidget {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [BoxShadow(color: primaryMaroon.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
       ),
-      child: const Row(
-        children: [
+      child: Row(
+        children: const [
           Icon(Icons.calendar_month_rounded, color: Colors.white),
           SizedBox(width: 15),
-          Text('30 Maret 2026', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          Text('Hari Ini', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -151,7 +290,7 @@ class RevenueDashboard extends StatelessWidget {
   Widget _buildStatCards() {
     return Row(
       children: [
-        _statItem("Total Pendapatan", "Rp 23.000", Icons.payments_outlined),
+        _statItem("Total Pendapatan", "Rp 80.000", Icons.payments_outlined),
         const SizedBox(width: 15),
         _statItem("Total Transaksi", "2", Icons.shopping_bag_outlined),
       ],
@@ -165,11 +304,6 @@ class RevenueDashboard extends StatelessWidget {
         decoration: BoxDecoration(
           color: darkCard,
           borderRadius: BorderRadius.circular(18),
-          image: DecorationImage(
-            image: const NetworkImage('https://www.transparenttextures.com/patterns/carbon-fibre.png'),
-            opacity: 0.05,
-            repeat: ImageRepeat.repeat,
-          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,41 +326,8 @@ class RevenueDashboard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))],
       ),
-      child: Column(
-        children: [
-          const Text('Trend Pendapatan Mingguan', style: TextStyle(fontWeight: FontWeight.bold, color: primaryMaroon)),
-          const SizedBox(height: 25),
-          Expanded(
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (value) => FlLine(color: Colors.grey.withOpacity(0.1), strokeWidth: 1)),
-                titlesData: FlTitlesData(
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 30, getTitlesWidget: (value, meta) {
-                    const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum'];
-                    return Text(days[value.toInt() % 5], style: const TextStyle(color: Colors.grey, fontSize: 12));
-                  })),
-                ),
-                borderData: FlBorderData(show: false),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: [const FlSpot(0, 3), const FlSpot(1, 1.5), const FlSpot(2, 5), const FlSpot(3, 2.5), const FlSpot(4, 4)],
-                    isCurved: true,
-                    gradient: const LinearGradient(colors: [primaryMaroon, Colors.orange]),
-                    barWidth: 5,
-                    isStrokeCapRound: true,
-                    dotData: const FlDotData(show: false),
-                    belowBarData: BarAreaData(show: true, gradient: LinearGradient(colors: [primaryMaroon.withOpacity(0.2), primaryMaroon.withOpacity(0)])),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+      child: const Center(child: Text("Grafik Pendapatan", style: TextStyle(color: Colors.grey))),
     );
   }
 
@@ -235,19 +336,20 @@ class RevenueDashboard extends StatelessWidget {
       spacing: 12,
       runSpacing: 12,
       children: [
-        _actionBtn(Icons.add_shopping_cart, "Buka Kasir", Colors.green),
-        _actionBtn(Icons.no_meals, "Tutup Kasir", Colors.redAccent),
-        _actionBtn(Icons.inventory, "Produk", Colors.blueAccent),
-        _actionBtn(Icons.print_rounded, "Cetak", Colors.orange),
+        _actionBtn(Icons.add_shopping_cart, "Buka POS (Kasir)", Colors.green, () {
+          // Navigasi ke halaman POS atau show POS modal
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fitur POS akan dibuka.")));
+        }),
+        _actionBtn(Icons.print_rounded, "Cetak Laporan", Colors.orange, () {}),
       ],
     );
   }
 
-  Widget _actionBtn(IconData icon, String label, Color color) {
+  Widget _actionBtn(IconData icon, String label, Color color, VoidCallback onTap) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {},
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -269,8 +371,11 @@ class RevenueDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildOrderCard(String id, String name, String total) {
+  Widget _buildOrderCard(Map<String, dynamic> order) {
+    bool isWarning = order['timeRemaining'] < 300; // Kurang dari 5 menit warning
+
     return Container(
+      margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -283,61 +388,88 @@ class RevenueDashboard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(id, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: primaryMaroon)),
+              Text(order['id'], style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: primaryMaroon)),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(
+                  color: isWarning ? Colors.red[50] : Colors.orange[50], 
+                  borderRadius: BorderRadius.circular(8)
+                ),
                 child: Row(
-                  children: const [
-                    Icon(Icons.timer_outlined, color: Colors.red, size: 14),
-                    SizedBox(width: 4),
-                    Text("10.00", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12)),
+                  children: [
+                    Icon(Icons.timer_outlined, color: isWarning ? Colors.red : Colors.orange, size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatTime(order['timeRemaining']), 
+                      style: TextStyle(color: isWarning ? Colors.red : Colors.orange, fontWeight: FontWeight.bold, fontSize: 12)
+                    ),
                   ],
                 ),
               )
             ],
           ),
           const SizedBox(height: 5),
-          Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(height: 1),
-          ),
-          _orderRow("2x Mie Goreng", "Rp 30.000"),
-          _orderRow("1x Es Teh", "Rp 5.000"),
+          Text(order['name'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1)),
+          
+          ...List<Widget>.from(order['items'].map((item) => Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(item['name'], style: const TextStyle(color: Colors.black87)),
+                Text(item['price'], style: const TextStyle(color: Colors.black54, fontSize: 13)),
+              ],
+            ),
+          ))),
+
           const SizedBox(height: 15),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Total", style: TextStyle(color: Colors.grey)),
-              Text(total, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: darkCard)),
+              const Text("Total Bayar", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+              Text("Rp ${order['total']}", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: darkCard)),
             ],
           ),
+          const SizedBox(height: 15),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red[50],
+                    foregroundColor: Colors.red,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                  ),
+                  onPressed: () => _tolakPesanan(order['id']),
+                  child: const Text("Tolak"),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                  ),
+                  onPressed: () => _tampilkanModalPembayaran(order),
+                  child: const Text("Terima & Bayar"),
+                ),
+              ),
+            ],
+          )
         ],
       ),
     );
   }
-  Widget _orderRow(String item, String price) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 5),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(item, style: const TextStyle(color: Colors.black87)),
-          Text(price, style: const TextStyle(color: Colors.black54, fontSize: 13)),
-        ],
-      ),
-    );
-  }
-  // Helper untuk animasi masuk
+
   Widget _animateWidget(Widget child) {
     return AnimationConfiguration.staggeredList(
       position: 0,
       duration: const Duration(milliseconds: 600),
-      child: SlideAnimation(
-        verticalOffset: 30.0,
-        child: FadeInAnimation(child: child),
-      ),
+      child: SlideAnimation(verticalOffset: 30.0, child: FadeInAnimation(child: child)),
     );
   }
 }

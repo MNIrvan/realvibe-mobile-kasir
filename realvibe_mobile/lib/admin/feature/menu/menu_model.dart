@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class MenuItemInfo {
   const MenuItemInfo({
     required this.id,
@@ -48,10 +50,15 @@ class MenuItemInfo {
 
   /// URL gambar dari server
   String get gambarUrl {
-    if (gambar != null && gambar!.isNotEmpty) {
-      return 'http://127.0.0.1:8000/storage/$gambar';
-    }
-    return '';
+    if (gambar == null || gambar!.isEmpty) return '';
+    if (gambar!.startsWith('http')) return gambar!;
+    
+    final host = kIsWeb
+        ? '127.0.0.1'
+        : defaultTargetPlatform == TargetPlatform.android
+            ? '10.0.2.2'
+            : '127.0.0.1';
+    return 'http://$host:8000/storage/$gambar';
   }
 
   /// Apakah ada gambar dari server

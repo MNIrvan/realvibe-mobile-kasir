@@ -1,7 +1,47 @@
 import 'package:flutter/material.dart';
+import '../../feature/users/user_service.dart';
 
-class TambahUserForm extends StatelessWidget {
+class TambahUserForm extends StatefulWidget {
   const TambahUserForm({super.key});
+
+  @override
+  State<TambahUserForm> createState() => _TambahUserFormState();
+}
+
+class _TambahUserFormState extends State<TambahUserForm> {
+  final UserService _service = UserService();
+  final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _phoneController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _submit() async {
+    setState(() => _isLoading = true);
+    try {
+      await _service.addUser({
+        'name': _nameController.text,
+        'username': _usernameController.text,
+        'password': _passwordController.text,
+        'phone': _phoneController.text,
+        'role': 'kasir',
+      });
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      debugPrint('Failed to add user: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,36 +127,42 @@ class TambahUserForm extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             const _FieldLabel(text: 'Nama'),
-            const _InputField(hintText: 'Contoh: Rina Pratama'),
+            _InputField(controller: _nameController, hintText: 'Contoh: Rina Pratama'),
             const SizedBox(height: 10),
             const _FieldLabel(text: 'Username'),
-            const _InputField(hintText: 'Contoh: rina.p'),
+            _InputField(controller: _usernameController, hintText: 'Contoh: rina.p'),
             const SizedBox(height: 10),
             const _FieldLabel(text: 'Password'),
-            const _InputField(
+            _InputField(
+              controller: _passwordController,
               hintText: 'Contoh: ********',
               obscureText: true,
             ),
             const SizedBox(height: 10),
             const _FieldLabel(text: 'No. Telp'),
-            const _InputField(hintText: 'Contoh: 0812-3344-2211'),
+            _InputField(controller: _phoneController, hintText: 'Contoh: 0812-3344-2211'),
             const SizedBox(height: 14),
             Align(
               alignment: Alignment.centerRight,
-              child: Container(
-                margin: const EdgeInsets.only(right: 16, bottom: 16),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF2A53A),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'SIMPAN',
-                  style: TextStyle(
-                    color: Color(0xFF4A2B14),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
+              child: InkWell(
+                onTap: _isLoading ? null : _submit,
+                child: Container(
+                  margin: const EdgeInsets.only(right: 16, bottom: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF2A53A),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: _isLoading 
+                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text(
+                    'SIMPAN',
+                    style: TextStyle(
+                      color: Color(0xFF4A2B14),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                    ),
                   ),
                 ),
               ),
@@ -158,12 +204,14 @@ class _InputField extends StatelessWidget {
     this.obscureText = false,
     this.readOnly = false,
     this.initialValue,
+    this.controller,
   });
 
   final String? hintText;
   final bool obscureText;
   final bool readOnly;
   final String? initialValue;
+  final TextEditingController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -171,9 +219,9 @@ class _InputField extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: TextField(
         readOnly: readOnly,
-        controller: initialValue == null
+        controller: controller ?? (initialValue == null
             ? null
-            : TextEditingController(text: initialValue),
+            : TextEditingController(text: initialValue)),
         obscureText: obscureText,
         decoration: InputDecoration(
           isDense: true,

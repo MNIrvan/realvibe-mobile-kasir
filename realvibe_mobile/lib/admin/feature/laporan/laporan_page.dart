@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../data/laporan_data.dart';
+import 'laporan_model.dart';
+import 'laporan_service.dart';
 import '../../modal/form_laporan_cetak/form_laporan_cetak.dart';
 
 enum LaporanFilter { tunai, nonTunai, uangKeluar, keseluruhan }
@@ -20,7 +21,7 @@ class LaporanPage extends StatefulWidget {
 }
 
 class _LaporanPageState extends State<LaporanPage> {
-  LaporanFilter selected = LaporanFilter.tunai;
+  LaporanFilter selected = LaporanFilter.keseluruhan;
   final TextEditingController _searchController = TextEditingController();
   DateTime? _selectedDate;
 
@@ -434,13 +435,19 @@ class _ReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: Padding(
+        padding: EdgeInsets.all(24.0),
+        child: CircularProgressIndicator(color: Color(0xFF8F1A1A)),
+      ));
+    }
+
     final entries = selected == LaporanFilter.tunai
-        ? laporanTunai
+        ? data.where((e) => e.metode.toLowerCase() == 'tunai').toList()
         : selected == LaporanFilter.nonTunai
-            ? laporanNonTunai
-            : selected == LaporanFilter.keseluruhan
-                ? laporanKeseluruhan()
-                : const <LaporanEntry>[];
+            ? data.where((e) => e.metode.toLowerCase() != 'tunai').toList()
+            : data;
+
     final query = searchQuery.trim().toLowerCase();
     final filtered = query.isEmpty
         ? entries
@@ -692,7 +699,7 @@ class _ToolbarButton extends StatelessWidget {
 class _ReportTable extends StatelessWidget {
   const _ReportTable({required this.entries, required this.isMobile});
 
-  final List<LaporanEntry> entries;
+  final List<LaporanModel> entries;
   final bool isMobile;
 
   @override

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../dashboard/dashboard_page.dart';
 import '../kasir/dashboard_kasir.dart';
+import '../admin/dashboard_admin.dart';
 import '../dashboardCs.dart';
 
 class LoginPage extends StatefulWidget {
@@ -42,7 +43,10 @@ class _LoginPageState extends State<LoginPage> {
 
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: jsonEncode({
           'username': _usernameController.text,
           'password': _passwordController.text,
@@ -68,11 +72,11 @@ class _LoginPageState extends State<LoginPage> {
         if (role == 'kasir') {
           targetPage = const RevenueDashboard();
         } else if (role == 'admin') {
-          targetPage = const DashboardPage();
+          targetPage = const AdminDashboard();
         } else if (role == 'customer') {
           targetPage = DashboardCS();
         } else {
-          targetPage = const DashboardPage();
+          targetPage = const AdminDashboard();
         }
 
         // Login berhasil, arahkan ke dashboard sesuai role
