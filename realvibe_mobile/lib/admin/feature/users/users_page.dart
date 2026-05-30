@@ -3,10 +3,15 @@ import '../../modal/form_tambah_user/tambah_user_form.dart';
 import 'user_model.dart';
 import 'user_service.dart';
 
-class UsersPage extends StatefulWidget {
-  const UsersPage({super.key, required this.isMobile});
+class UsersPage extends StatelessWidget {
+  const UsersPage({
+    super.key,
+    required this.isMobile,
+    this.onOpenDrawer,
+  });
 
   final bool isMobile;
+  final VoidCallback? onOpenDrawer;
 
   @override
   State<UsersPage> createState() => _UsersPageState();
@@ -55,7 +60,7 @@ class _UsersPageState extends State<UsersPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _UsersHeader(isMobile: isMobile),
+          _UsersHeader(isMobile: isMobile, onOpenDrawer: onOpenDrawer),
           const SizedBox(height: 18),
           Row(
             children: [
@@ -113,9 +118,10 @@ class _UsersPageState extends State<UsersPage> {
 }
 
 class _UsersHeader extends StatelessWidget {
-  const _UsersHeader({required this.isMobile});
+  const _UsersHeader({required this.isMobile, this.onOpenDrawer});
 
   final bool isMobile;
+  final VoidCallback? onOpenDrawer;
 
   @override
   Widget build(BuildContext context) {
@@ -134,8 +140,13 @@ class _UsersHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (isMobile)
-            const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
+          if (onOpenDrawer != null)
+            IconButton(
+              constraints: const BoxConstraints(),
+              padding: EdgeInsets.zero,
+              onPressed: onOpenDrawer,
+              icon: const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
+            ),
           if (isMobile) const SizedBox(width: 10),
           const Expanded(
             child: Text(

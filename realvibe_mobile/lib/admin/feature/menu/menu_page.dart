@@ -7,16 +7,18 @@ class MenuPage extends StatefulWidget {
   const MenuPage({
     super.key,
     required this.isMobile,
+    this.onOpenDrawer,
   });
 
   final bool isMobile;
+  final VoidCallback? onOpenDrawer;
 
   @override
   State<MenuPage> createState() => _MenuPageState();
 }
 
 class _MenuPageState extends State<MenuPage> {
-  bool showTambahMenu = false;
+  bool _isTambahMenuDialogOpen = false;
   bool _isGridView = true;
   bool _isLoading = true;
   String? _errorMessage;
@@ -74,7 +76,10 @@ class _MenuPageState extends State<MenuPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _MenuHeader(isMobile: isMobile),
+          _MenuHeader(
+            isMobile: isMobile,
+            onOpenDrawer: widget.onOpenDrawer,
+          ),
           const SizedBox(height: 18),
           _SearchBar(
             isMobile: isMobile,
@@ -83,20 +88,35 @@ class _MenuPageState extends State<MenuPage> {
           ),
           const SizedBox(height: 18),
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              _ViewToggle(
-                title: 'Grid View',
-                icon: Icons.grid_view,
-                isSelected: _isGridView,
-                onTap: () => setState(() => _isGridView = true),
+              Expanded(
+                child: _ViewToggle(
+                  title: 'Grid View',
+                  icon: Icons.grid_view,
+                  isSelected: _isGridView,
+                  compact: isMobile,
+                  onTap: () => setState(() => _isGridView = true),
+                ),
               ),
               const SizedBox(width: 8),
-              _ViewToggle(
-                title: 'Table View',
-                icon: Icons.table_chart,
-                isSelected: !_isGridView,
-                onTap: () => setState(() => _isGridView = false),
+              Expanded(
+                child: _ViewToggle(
+                  title: 'Table View',
+                  icon: Icons.table_chart,
+                  isSelected: !_isGridView,
+                  compact: isMobile,
+                  onTap: () => setState(() => _isGridView = false),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ViewToggle(
+                  title: '+Tambah Menu',
+                  icon: Icons.add,
+                  isSelected: _isTambahMenuDialogOpen,
+                  compact: isMobile,
+                  onTap: _openTambahMenuDialog,
+                ),
               ),
             ],
           ),
@@ -148,74 +168,41 @@ class _MenuPageState extends State<MenuPage> {
   }
 
   Widget _buildContent(bool isMobile) {
-    return Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) => _isGridView
-                    ? _MenuGrid(
-                        isMobile: isMobile,
-                        constraints: constraints,
-                        items: _filteredMenuItems,
-                        onEdit: _showEditForm,
-                        onDelete: _showDeleteConfirm,
-                      )
-                    : _MenuTable(
-                        isMobile: isMobile,
-                        items: _filteredMenuItems,
-                        onEdit: _showEditForm,
-                        onDelete: _showDeleteConfirm,
-                      ),
-              ),
+    return LayoutBuilder(
+      builder: (context, constraints) => _isGridView
+          ? _MenuGrid(
+              isMobile: isMobile,
+              constraints: constraints,
+              items: _filteredMenuItems,
+              onEdit: _showEditForm,
+              onDelete: _showDeleteConfirm,
+            )
+          : _MenuTable(
+              isMobile: isMobile,
+              items: _filteredMenuItems,
+              onEdit: _showEditForm,
+              onDelete: _showDeleteConfirm,
             ),
-            if (!isMobile) ...[
-              const SizedBox(width: 20),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _FeaturePanel(
-                    onAddMenu: _toggleTambahMenu,
-                    onCloseForm: _closeTambahMenu,
-                    showCollapsed: showTambahMenu,
-                  ),
-                  if (showTambahMenu) ...[
-                    const SizedBox(height: 12),
-                    TambahMenuFormCard(onSaved: _loadMenus),
-                  ],
-                ],
-              ),
-            ],
-          ],
-        ),
-        if (isMobile) ...[
-          const SizedBox(height: 16),
-          _FeaturePanel(
-            onAddMenu: _toggleTambahMenu,
-            onCloseForm: _closeTambahMenu,
-            showCollapsed: showTambahMenu,
-          ),
-          if (showTambahMenu) ...[
-            const SizedBox(height: 12),
-            TambahMenuFormCard(onSaved: _loadMenus),
-          ],
-        ],
-      ],
     );
   }
 
-  void _toggleTambahMenu() {
-    setState(() {
-      showTambahMenu = !showTambahMenu;
-    });
-  }
-
-  void _closeTambahMenu() {
-    setState(() {
-      showTambahMenu = false;
-    });
+  Future<void> _openTambahMenuDialog() async {
+    if (_isTambahMenuDialogOpen) return;
+    setState(() => _isTambahMenuDialogOpen = true);
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        child: MenuForm(
+          onSaved: _loadMenus,
+          isDialog: true,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    setState(() => _isTambahMenuDialogOpen = false);
   }
 
   List<MenuItemInfo> get _filteredMenuItems {
@@ -292,9 +279,13 @@ class _MenuPageState extends State<MenuPage> {
 }
 
 class _MenuHeader extends StatelessWidget {
-  const _MenuHeader({required this.isMobile});
+  const _MenuHeader({
+    required this.isMobile,
+    this.onOpenDrawer,
+  });
 
   final bool isMobile;
+  final VoidCallback? onOpenDrawer;
 
   @override
   Widget build(BuildContext context) {
@@ -313,8 +304,13 @@ class _MenuHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (isMobile)
-            const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
+          if (onOpenDrawer != null)
+            IconButton(
+              constraints: const BoxConstraints(),
+              padding: EdgeInsets.zero,
+              onPressed: onOpenDrawer,
+              icon: const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
+            ),
           if (isMobile) const SizedBox(width: 10),
           const Expanded(
             child: Text(
@@ -651,132 +647,36 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-class _FeaturePanel extends StatelessWidget {
-  const _FeaturePanel({
-    required this.onAddMenu,
-    required this.onCloseForm,
-    required this.showCollapsed,
-  });
-
-  final VoidCallback onAddMenu;
-  final VoidCallback onCloseForm;
-  final bool showCollapsed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 220,
-      decoration: BoxDecoration(
-        color: const Color(0xFF8F1A1A),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(10),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'FITUR',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-                if (showCollapsed)
-                  InkWell(
-                    onTap: onCloseForm,
-                    borderRadius: BorderRadius.circular(8),
-                    child: const Padding(
-                      padding: EdgeInsets.all(4),
-                      child:
-                          Icon(Icons.open_in_full, color: Colors.white, size: 14),
-                    ),
-                  ),
-                if (!showCollapsed)
-                  const Icon(Icons.open_in_full, color: Colors.white, size: 14),
-              ],
-            ),
-          ),
-          if (!showCollapsed) ...[
-            const Divider(height: 1, color: Color(0x55FFFFFF)),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Text(
-                'Stok',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-            const Divider(height: 1, color: Color(0x55FFFFFF)),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(10),
-                  onTap: onAddMenu,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFA92A2A),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        '+Tambah Menu',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 class _ViewToggle extends StatelessWidget {
   const _ViewToggle({
     required this.title,
     required this.icon,
     required this.isSelected,
     required this.onTap,
+    this.compact = false,
   });
 
   final String title;
   final IconData icon;
   final bool isSelected;
   final VoidCallback onTap;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final verticalPadding = compact ? 9.0 : 8.0;
+    final horizontalPadding = compact ? 8.0 : 12.0;
+    final iconSize = compact ? 14.0 : 16.0;
+    final fontSize = compact ? 11.0 : 12.0;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: verticalPadding,
+        ),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF8F1A1A) : Colors.white,
           borderRadius: BorderRadius.circular(8),
@@ -784,23 +684,29 @@ class _ViewToggle extends StatelessWidget {
             color: isSelected ? const Color(0xFF8F1A1A) : const Color(0xFFE0D8D5),
           ),
         ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: isSelected ? Colors.white : const Color(0xFF6F6460),
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: iconSize,
+                  color: isSelected ? Colors.white : const Color(0xFF6F6460),
+                ),
+                SizedBox(width: compact ? 6 : 8),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? Colors.white : const Color(0xFF6F6460),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : const Color(0xFF6F6460),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

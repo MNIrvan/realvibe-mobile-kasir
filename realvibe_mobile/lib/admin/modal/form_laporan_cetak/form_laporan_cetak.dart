@@ -38,7 +38,21 @@ class FormLaporanCetak extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            Row(
+              children: [
+                const Spacer(),
+                InkWell(
+                  onTap: () => Navigator.of(context).pop(),
+                  borderRadius: BorderRadius.circular(8),
+                  child: const Padding(
+                    padding: EdgeInsets.all(2),
+                    child: Icon(Icons.close, size: 18, color: Color(0xFF8F1A1A)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            const Text(
               'LAPORAN PENJUALAN',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
@@ -322,6 +336,20 @@ class _DownloadSuccessDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Row(
+              children: [
+                const Spacer(),
+                InkWell(
+                  onTap: () => Navigator.of(context).pop(),
+                  borderRadius: BorderRadius.circular(8),
+                  child: const Padding(
+                    padding: EdgeInsets.all(2),
+                    child: Icon(Icons.close, size: 18, color: Color(0xFF8F1A1A)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
             const Icon(Icons.download, size: 42, color: Color(0xFF8F1A1A)),
             const SizedBox(height: 10),
             const Text(

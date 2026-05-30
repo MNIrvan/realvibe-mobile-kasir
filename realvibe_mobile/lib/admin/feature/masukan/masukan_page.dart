@@ -3,9 +3,10 @@ import 'masukan_model.dart';
 import 'masukan_service.dart';
 
 class MasukanPage extends StatefulWidget {
-  const MasukanPage({super.key, required this.isMobile});
+  const MasukanPage({super.key, required this.isMobile, this.onOpenDrawer});
 
   final bool isMobile;
+  final VoidCallback? onOpenDrawer;
 
   @override
   State<MasukanPage> createState() => _MasukanPageState();
@@ -66,6 +67,7 @@ class _MasukanPageState extends State<MasukanPage> {
             isMobile: isMobile,
             controller: _searchController,
             onChanged: (_) => setState(() {}),
+            onOpenDrawer: widget.onOpenDrawer,
           ),
           const SizedBox(height: 18),
           _SectionHeader(
@@ -122,11 +124,13 @@ class _MasukanHeader extends StatelessWidget {
     required this.isMobile,
     required this.controller,
     required this.onChanged,
+    this.onOpenDrawer,
   });
 
   final bool isMobile;
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
+  final VoidCallback? onOpenDrawer;
 
   @override
   Widget build(BuildContext context) {
@@ -145,8 +149,13 @@ class _MasukanHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (isMobile)
-            const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
+          if (onOpenDrawer != null)
+            IconButton(
+              constraints: const BoxConstraints(),
+              padding: EdgeInsets.zero,
+              onPressed: onOpenDrawer,
+              icon: const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
+            ),
           if (isMobile) const SizedBox(width: 10),
           const Expanded(
             child: Text(

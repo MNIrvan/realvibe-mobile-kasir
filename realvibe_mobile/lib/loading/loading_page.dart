@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../auth/login.dart';
-import '../dashboardCs.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});
@@ -162,8 +161,8 @@ class _LoadingPageState extends State<LoadingPage>
       return;
     }
     
-    // Check if backend is running and get user role
-    Widget nextPage = const LoginPage(); // Default to login page
+    // Default flow: always show login page first.
+    Widget nextPage = const LoginPage();
     try {
       final host = kIsWeb
           ? '127.0.0.1'
@@ -173,14 +172,11 @@ class _LoadingPageState extends State<LoadingPage>
       final response = await http
           .get(Uri.parse('http://$host:8000/api/user'))
           .timeout(const Duration(seconds: 5));
-      
-      if (response.statusCode == 200) {
-        // Backend is running
-        // Redirect ke LoginPage sesuai dengan instruksi
-        nextPage = const LoginPage();
-      }
+
+      // Backend reachable: keep next page as login.
+      if (response.statusCode == 200) {}
     } catch (e) {
-      // Backend is not running or user is not authenticated, go to login
+      // Backend is not running/unreachable: keep next page as login.
       nextPage = const LoginPage();
     }
     
