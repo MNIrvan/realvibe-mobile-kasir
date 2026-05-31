@@ -7,6 +7,7 @@ use App\Models\Menu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class MenuController extends Controller
 {
@@ -20,6 +21,19 @@ class MenuController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $menus,
+        ]);
+    }
+
+    /**
+     * Menampilkan semua data kategori menu.
+     */
+    public function getCategories()
+    {
+        $categories = DB::table('kategori_menu')->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $categories,
         ]);
     }
 

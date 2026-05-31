@@ -4,11 +4,7 @@ import 'menu_service.dart';
 import '../../modal/form_tambah_menu/tambah_menu_form.dart';
 
 class MenuPage extends StatefulWidget {
-  const MenuPage({
-    super.key,
-    required this.isMobile,
-    this.onOpenDrawer,
-  });
+  const MenuPage({super.key, required this.isMobile, this.onOpenDrawer});
 
   final bool isMobile;
   final VoidCallback? onOpenDrawer;
@@ -62,7 +58,6 @@ class _MenuPageState extends State<MenuPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final isMobile = widget.isMobile;
@@ -76,10 +71,7 @@ class _MenuPageState extends State<MenuPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _MenuHeader(
-            isMobile: isMobile,
-            onOpenDrawer: widget.onOpenDrawer,
-          ),
+          _MenuHeader(isMobile: isMobile, onOpenDrawer: widget.onOpenDrawer),
           const SizedBox(height: 18),
           _SearchBar(
             isMobile: isMobile,
@@ -111,7 +103,7 @@ class _MenuPageState extends State<MenuPage> {
               const SizedBox(width: 8),
               Expanded(
                 child: _ViewToggle(
-                  title: '+Tambah Menu',
+                  title: 'Tambah Menu',
                   icon: Icons.add,
                   isSelected: _isTambahMenuDialogOpen,
                   compact: isMobile,
@@ -134,19 +126,29 @@ class _MenuPageState extends State<MenuPage> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.orange.withAlpha(30),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.warning_amber, color: Colors.orange, size: 18),
+                        const Icon(
+                          Icons.warning_amber,
+                          color: Colors.orange,
+                          size: 18,
+                        ),
                         const SizedBox(width: 8),
                         const Expanded(
                           child: Text(
                             'Menggunakan data offline. Server tidak tersedia.',
-                            style: TextStyle(fontSize: 11, color: Colors.orange),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.orange,
+                            ),
                           ),
                         ),
                         IconButton(
@@ -195,10 +197,7 @@ class _MenuPageState extends State<MenuPage> {
       builder: (_) => Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: MenuForm(
-          onSaved: _loadMenus,
-          isDialog: true,
-        ),
+        child: MenuForm(onSaved: _loadMenus, isDialog: true),
       ),
     );
     if (!mounted) return;
@@ -218,11 +217,7 @@ class _MenuPageState extends State<MenuPage> {
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        child: MenuForm(
-          menuItem: item,
-          onSaved: _loadMenus,
-          isDialog: true,
-        ),
+        child: MenuForm(menuItem: item, onSaved: _loadMenus, isDialog: true),
       ),
     );
   }
@@ -279,10 +274,7 @@ class _MenuPageState extends State<MenuPage> {
 }
 
 class _MenuHeader extends StatelessWidget {
-  const _MenuHeader({
-    required this.isMobile,
-    this.onOpenDrawer,
-  });
+  const _MenuHeader({required this.isMobile, this.onOpenDrawer});
 
   final bool isMobile;
   final VoidCallback? onOpenDrawer;
@@ -433,7 +425,9 @@ class _MenuGrid extends StatelessWidget {
                   width: double.infinity,
                   decoration: const BoxDecoration(
                     color: Color(0xFFF4ECE3),
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
@@ -499,7 +493,9 @@ class _MenuGrid extends StatelessWidget {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.blue[700],
                             side: BorderSide(color: Colors.blue[700]!),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
@@ -516,7 +512,9 @@ class _MenuGrid extends StatelessWidget {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF8F1A1A),
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             elevation: 0,
                           ),
@@ -538,7 +536,8 @@ class _MenuGrid extends StatelessWidget {
       return Image.network(
         item.gambarUrl,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => const Icon(Icons.fastfood, color: Color(0xFF8F1A1A), size: 40),
+        errorBuilder: (_, __, ___) =>
+            const Icon(Icons.fastfood, color: Color(0xFF8F1A1A), size: 40),
       );
     } else if (item.hasLocalImage) {
       return Image.asset(item.imagePath, fit: BoxFit.contain);
@@ -613,7 +612,8 @@ class _MenuCard extends StatelessWidget {
       return Image.network(
         item.gambarUrl,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => const Icon(Icons.fastfood, color: Color(0xFF8F1A1A), size: 30),
+        errorBuilder: (_, __, ___) =>
+            const Icon(Icons.fastfood, color: Color(0xFF8F1A1A), size: 30),
       );
     } else if (item.hasLocalImage) {
       return Image.asset(item.imagePath, fit: BoxFit.contain);
@@ -632,7 +632,9 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isTersedia ? Colors.green.withAlpha(30) : Colors.red.withAlpha(30),
+        color: isTersedia
+            ? Colors.green.withAlpha(30)
+            : Colors.red.withAlpha(30),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -681,7 +683,9 @@ class _ViewToggle extends StatelessWidget {
           color: isSelected ? const Color(0xFF8F1A1A) : Colors.white,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? const Color(0xFF8F1A1A) : const Color(0xFFE0D8D5),
+            color: isSelected
+                ? const Color(0xFF8F1A1A)
+                : const Color(0xFFE0D8D5),
           ),
         ),
         child: Center(
@@ -743,78 +747,144 @@ class _MenuTable extends StatelessWidget {
       ),
       child: Theme(
         data: Theme.of(context).copyWith(
-          dividerTheme: const DividerThemeData(thickness: 0.5, color: Color(0xFFE0D8D5)),
+          dividerTheme: const DividerThemeData(
+            thickness: 0.5,
+            color: Color(0xFFE0D8D5),
+          ),
         ),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - (isMobile ? 32 : 300)),
+            constraints: BoxConstraints(
+              minWidth:
+                  MediaQuery.of(context).size.width - (isMobile ? 32 : 300),
+            ),
             child: DataTable(
               horizontalMargin: 4,
               columnSpacing: 8,
               headingRowHeight: 56,
               dataRowMaxHeight: 64,
-              headingRowColor: WidgetStateProperty.resolveWith((states) => const Color(0xFFF4ECE3)),
+              headingRowColor: WidgetStateProperty.resolveWith(
+                (states) => const Color(0xFFF4ECE3),
+              ),
               columns: const [
-                DataColumn(label: Text('ID', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12))),
-                DataColumn(label: Text('Gambar', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12))),
-                DataColumn(label: Text('Nama Menu', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12))),
-                DataColumn(label: Text('Kat.', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12))),
-                DataColumn(label: Text('Harga', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12))),
-                DataColumn(label: Text('Stok', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12))),
-                DataColumn(label: Text('Aksi', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12))),
+                DataColumn(
+                  label: Text(
+                    'ID',
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Gambar',
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Nama Menu',
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Kat.',
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Harga',
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Stok',
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+                  ),
+                ),
+                DataColumn(
+                  label: Text(
+                    'Aksi',
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+                  ),
+                ),
               ],
               rows: items.map((item) {
-                return DataRow(cells: [
-                  DataCell(Text(item.id.toString(), style: const TextStyle(fontSize: 12))),
-                  DataCell(
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          color: const Color(0xFFF4ECE3),
-                          child: _buildTableImage(item),
+                return DataRow(
+                  cells: [
+                    DataCell(
+                      Text(
+                        item.id.toString(),
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                    DataCell(
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            color: const Color(0xFFF4ECE3),
+                            child: _buildTableImage(item),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  DataCell(
-                    SizedBox(
-                      width: 100,
-                      child: Text(
-                        item.namaMenu,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-                        overflow: TextOverflow.ellipsis,
+                    DataCell(
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          item.namaMenu,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
-                  ),
-                  DataCell(Text(item.idKategoriMenu.toString(), style: const TextStyle(fontSize: 12))),
-                  DataCell(Text('Rp ${item.harga.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12))),
-                  DataCell(_StatusBadge(stok: item.stok)),
-                  DataCell(
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _TableActionButton(
-                          icon: Icons.edit_rounded,
-                          color: Colors.blue,
-                          tooltip: 'Edit Menu',
-                          onTap: () => onEdit(item),
-                        ),
-                        const SizedBox(width: 4),
-                        _TableActionButton(
-                          icon: Icons.delete_rounded,
-                          color: const Color(0xFF8F1A1A),
-                          tooltip: 'Hapus Menu',
-                          onTap: () => onDelete(item),
-                        ),
-                      ],
+                    DataCell(
+                      Text(
+                        item.idKategoriMenu.toString(),
+                        style: const TextStyle(fontSize: 12),
+                      ),
                     ),
-                  ),
-                ]);
+                    DataCell(
+                      Text(
+                        'Rp ${item.harga.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    DataCell(_StatusBadge(stok: item.stok)),
+                    DataCell(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _TableActionButton(
+                            icon: Icons.edit_rounded,
+                            color: Colors.blue,
+                            tooltip: 'Edit Menu',
+                            onTap: () => onEdit(item),
+                          ),
+                          const SizedBox(width: 4),
+                          _TableActionButton(
+                            icon: Icons.delete_rounded,
+                            color: const Color(0xFF8F1A1A),
+                            tooltip: 'Hapus Menu',
+                            onTap: () => onDelete(item),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
               }).toList(),
             ),
           ),
@@ -862,11 +932,7 @@ class _TableActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Icon(
-              icon,
-              size: 18,
-              color: color,
-            ),
+            child: Icon(icon, size: 18, color: color),
           ),
         ),
       ),

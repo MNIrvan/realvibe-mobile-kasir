@@ -3,34 +3,27 @@
 // Logika PHP dipindahkan ke sintaks Blade agar lebih bersih
 
 $page = request('page', 'menu');
-$kategori_aktif = request('kategori', 'snack');
+$kategori_aktif = request('kategori', '');
+// Set default category if none selected
+if (empty($kategori_aktif) && isset($kategori_list) && count($kategori_list) > 0) {
+    $kategori_aktif = strtolower(trim($kategori_list[0]->nama_kategori));
+}
+
 $search_query = strtolower(request('search', ''));
 
-$semua_menu = [
-    "snack" => [
-        // PERBAIKAN: Ubah gambar di sini dengan foto makanan yang besar (memanjang).
-        // Pastikan Daniel sudah memasukkan file foto besarnya ke dalam folder 'public/image/' dengan nama 'banner_makanan.jpg' (sebagai contoh).
-        ["nama" => "Ayam geprek", "sub" => "Spicy Smashed Chicken", "harga" => "15.000,00", "img" => "resources/image/WWW.jpg"],
-        ["nama" => "Tahu crispy", "sub" => "Crispy Tofu", "harga" => "10.000,00", "img" => "resources/image/tahu.jpg"],
-    ],
-    "makanan" => [
-        ["nama" => "Mie Goreng", "sub" => "Fried Noodles", "harga" => "15.000,00", "img" => "resources/image/mie.jpg"],
-    ],
-    "minuman" => [
-        ["nama" => "Es Teh", "sub" => "Iced Tea", "harga" => "5.000,00", "img" => "resources/image/teh.jpg"],
-    ],
-    "dessert" => [
-        ["nama" => "Pudding Coklat", "sub" => "Chocolate", "harga" => "8.000,00", "img" => "resources/image/pudding.jpg"],
-    ]
-];
-
-$menu_tampil = $semua_menu[$kategori_aktif] ?? [];
-
+$menu_tampil = [];
 if (!empty($search_query)) {
-    $menu_tampil = [];
-    foreach ($semua_menu as $cat => $items) {
-        foreach ($items as $item) {
-            if (strpos(strtolower($item['nama']), $search_query) !== false) {
+    if (isset($menus)) {
+        foreach ($menus as $item) {
+            if (strpos(strtolower($item->nama_menu), $search_query) !== false) {
+                $menu_tampil[] = $item;
+            }
+        }
+    }
+} else {
+    if (isset($menus)) {
+        foreach ($menus as $item) {
+            if (strtolower(trim($item->kategori)) == $kategori_aktif) {
                 $menu_tampil[] = $item;
             }
         }
@@ -306,14 +299,17 @@ $cart = session('cart', []);
             <div class="px-2 mb-4">
                 <h6 class="fw-bold">Kategori</h6>
                 <div class="d-flex gap-3 overflow-auto pb-2">
-                    @foreach(['snack', 'makanan', 'minuman', 'dessert'] as $cat)
-                    <a href="?page=menu&kategori={{ $cat }}" class="text-decoration-none text-dark">
-                        <div class="category-card {{ ($kategori_aktif == $cat && empty($search_query)) ? 'active' : '' }}">
-                            <i class="fas fa-utensils text-danger d-block mb-1"></i>
-                            <small>{{ ucfirst($cat) }}</small>
-                        </div>
-                    </a>
-                    @endforeach
+                    @if(isset($kategori_list))
+                        @foreach($kategori_list as $cat_obj)
+                        @php $cat = strtolower(trim($cat_obj->nama_kategori)); @endphp
+                        <a href="?page=menu&kategori={{ urlencode($cat) }}" class="text-decoration-none text-dark">
+                            <div class="category-card {{ ($kategori_aktif == $cat && empty($search_query)) ? 'active' : '' }}">
+                                <i class="fas fa-utensils text-danger d-block mb-1"></i>
+                                <small>{{ ucfirst($cat) }}</small>
+                            </div>
+                        </a>
+                        @endforeach
+                    @endif
                 </div>
             </div>
 
@@ -326,12 +322,12 @@ $cart = session('cart', []);
                         @foreach($menu_tampil as $m)
                         <div class="col-6">
                             <div class="card menu-card">
-                                <img src="{{ asset($m['img']) }}" class="mx-auto mt-2" onerror="this.src='https://via.placeholder.com/150?text=Menu'">
+                                <img src="{{ url('api/image/' . $m->gambar) }}" class="mx-auto mt-2" onerror="this.src='https://via.placeholder.com/150?text=Menu'">
                                 <div class="card-body p-2 mt-2">
-                                    <div class="fw-bold small">{{ $m['nama'] }}</div>
-                                    <div class="text-muted mb-2" style="font-size: 0.6rem;">{{ $m['sub'] }}</div>
-                                    <div class="text-danger fw-bold mb-2">Rp {{ $m['harga'] }}</div>
-                                    <button class="btn btn-tambah py-1 btn-beli" data-nama="{{ $m['nama'] }}" data-harga="{{ $m['harga'] }}">+ Tambah</button>
+                                    <div class="fw-bold small">{{ $m->nama_menu }}</div>
+                                    <div class="text-muted mb-2" style="font-size: 0.6rem;">Stok: {{ $m->stok }}</div>
+                                    <div class="text-danger fw-bold mb-2">Rp {{ number_format($m->harga, 0, ',', '.') }}</div>
+                                    <button class="btn btn-tambah py-1 btn-beli" data-nama="{{ $m->nama_menu }}" data-harga="{{ $m->harga }}" data-img="{{ url('api/image/' . $m->gambar) }}">+ Tambah</button>
                                 </div>
                             </div>
                         </div>

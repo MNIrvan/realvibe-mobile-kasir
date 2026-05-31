@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:http/http.dart' as http;
 
 class RevenueDashboard extends StatefulWidget {
   const RevenueDashboard({super.key});
@@ -15,68 +18,71 @@ class _RevenueDashboardState extends State<RevenueDashboard> {
   static const Color darkCard = Color(0xFF632117);
   static const Color bgKrem = Color(0xFFF7EFE5);
 
-  Timer? _timer;
+  Timer? _fetchTimer;
+  Timer? _countdownTimer;
 
-  // Data pesanan simulasi dari web (1800 detik = 30 menit)
-  List<Map<String, dynamic>> incomingOrders = [
-    {
-      "id": "#RV-001",
-      "name": "Budi Haryono",
-      "total": 60000,
-      "items": [
-        {"name": "2x Mie Goreng", "price": "Rp 30.000"},
-        {"name": "1x Es Teh", "price": "Rp 5.000"}
-      ],
-      "timeRemaining": 1800, 
-    },
-    {
-      "id": "#RV-002",
-      "name": "Siti Aminah",
-      "total": 20000,
-      "items": [
-        {"name": "2x Tahu Crispy", "price": "Rp 20.000"}
-      ],
-      "timeRemaining": 60, // Sisa 1 menit (untuk testing hilang otomatis)
-    }
-  ];
+  List<Map<String, dynamic>> incomingOrders = [];
+  bool isLoading = false;
+
+  static String get _apiBase {
+    final host = kIsWeb
+        ? '127.0.0.1'
+        : defaultTargetPlatform == TargetPlatform.android
+            ? '10.0.2.2'
+            : '127.0.0.1';
+    return 'http://$host:8000/api';
+  }
 
   @override
   void initState() {
     super.initState();
-    _startCountdown();
-  }
-
-  void _startCountdown() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _fetchOrders();
+    // Poll API every 3 seconds
+    _fetchTimer = Timer.periodic(const Duration(seconds: 3), (_) => _fetchOrders());
+    // Countdown every second for UI
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       setState(() {
-        // Hapus otomatis pesanan yang waktunya habis (0 detik)
-        incomingOrders.removeWhere((order) => order['timeRemaining'] <= 0);
-        
-        // Kurangi waktu untuk pesanan yang masih ada
         for (var order in incomingOrders) {
           if (order['timeRemaining'] > 0) {
             order['timeRemaining']--;
           }
         }
+        incomingOrders.removeWhere((o) => o['timeRemaining'] <= 0);
       });
     });
   }
 
+  Future<void> _fetchOrders() async {
+    try {
+      final response = await http.get(Uri.parse('$_apiBase/kasir/pesanan'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        if (!mounted) return;
+        setState(() {
+          incomingOrders = data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+        });
+      }
+    } catch (e) {
+      // Silently fail - will retry next poll
+      debugPrint('Error fetching orders: $e');
+    }
+  }
+
   @override
   void dispose() {
-    _timer?.cancel();
+    _fetchTimer?.cancel();
+    _countdownTimer?.cancel();
     super.dispose();
   }
 
-  // --- FUNGSI FORMAT WAKTU ---
   String _formatTime(int seconds) {
     int minutes = seconds ~/ 60;
     int remainingSeconds = seconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
-  // --- LOGIKA KASIR (POS) & PEMBAYARAN ---
+  // --- TERIMA PESANAN ---
   void _tampilkanModalPembayaran(Map<String, dynamic> orderDetails) {
     TextEditingController uangMasukController = TextEditingController();
     int grandTotal = orderDetails['total'] ?? 0;
@@ -97,8 +103,26 @@ class _RevenueDashboardState extends State<RevenueDashboard> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Pesanan: ${orderDetails['id']} - ${orderDetails['name']}"),
+                    Text("Pesanan: ${orderDetails['nomor_antrian']} - ${orderDetails['name']}"),
+                    const SizedBox(height: 5),
+                    Text("Metode: ${(orderDetails['metode'] ?? 'tunai').toString().toUpperCase()}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    if (orderDetails['catatan'] != null && orderDetails['catatan'].toString().isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text("Catatan: ${orderDetails['catatan']}", style: const TextStyle(fontSize: 12, color: Colors.orange)),
+                    ],
                     const SizedBox(height: 10),
+                    const Divider(),
+                    // Show items
+                    ...List<Widget>.from((orderDetails['items'] as List).map((item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(child: Text(item['name'], style: const TextStyle(fontSize: 13))),
+                          Text(item['price'], style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                        ],
+                      ),
+                    ))),
                     const Divider(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -146,13 +170,20 @@ class _RevenueDashboardState extends State<RevenueDashboard> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: primaryMaroon, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                  onPressed: kembalian < 0 ? null : () {
-                    // Berhasil dibayar, hapus dari antrean
-                    setState(() {
-                      incomingOrders.removeWhere((o) => o['id'] == orderDetails['id']);
-                    });
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Pembayaran Berhasil!")));
+                  onPressed: kembalian < 0 ? null : () async {
+                    try {
+                      final res = await http.post(Uri.parse('$_apiBase/kasir/pesanan/${orderDetails['id']}/terima'));
+                      if (res.statusCode == 200) {
+                        if (!mounted) return;
+                        setState(() {
+                          incomingOrders.removeWhere((o) => o['id'] == orderDetails['id']);
+                        });
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Pembayaran Berhasil! Pesanan diterima.")));
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+                    }
                   },
                   child: const Text("Selesaikan Pembayaran"),
                 ),
@@ -164,11 +195,76 @@ class _RevenueDashboardState extends State<RevenueDashboard> {
     );
   }
 
-  void _tolakPesanan(String id) {
-    setState(() {
-      incomingOrders.removeWhere((order) => order['id'] == id);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Pesanan $id ditolak.")));
+  // --- TOLAK PESANAN ---
+  void _tolakPesanan(Map<String, dynamic> order) async {
+    try {
+      final res = await http.post(Uri.parse('$_apiBase/kasir/pesanan/${order['id']}/tolak'));
+      if (res.statusCode == 200) {
+        setState(() {
+          incomingOrders.removeWhere((o) => o['id'] == order['id']);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Pesanan ${order['nomor_antrian']} ditolak.")));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
+  }
+
+  // --- DETAIL POPUP ---
+  void _showOrderDetail(Map<String, dynamic> order) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(order['nomor_antrian'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, color: primaryMaroon)),
+              IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Pemesan: ${order['name']}", style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                Text("Metode: ${(order['metode'] ?? 'tunai').toString().toUpperCase()}", style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                if (order['catatan'] != null && order['catatan'].toString().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: Text("Catatan: ${order['catatan']}", style: const TextStyle(color: Colors.orange, fontSize: 13)),
+                  ),
+                const Divider(height: 20),
+                const Text("Detail Pesanan:", style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                ...List<Widget>.from((order['items'] as List).map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(child: Text(item['name'])),
+                      Text(item['price'], style: const TextStyle(color: Colors.black54)),
+                    ],
+                  ),
+                ))),
+                const Divider(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Total", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text("Rp ${order['total']}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: primaryMaroon)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text("Sisa waktu: ${_formatTime(order['timeRemaining'] ?? 0)}", style: const TextStyle(color: Colors.orange, fontSize: 12)),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -337,7 +433,6 @@ class _RevenueDashboardState extends State<RevenueDashboard> {
       runSpacing: 12,
       children: [
         _actionBtn(Icons.add_shopping_cart, "Buka POS (Kasir)", Colors.green, () {
-          // Navigasi ke halaman POS atau show POS modal
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fitur POS akan dibuka.")));
         }),
         _actionBtn(Icons.print_rounded, "Cetak Laporan", Colors.orange, () {}),
@@ -372,95 +467,98 @@ class _RevenueDashboardState extends State<RevenueDashboard> {
   }
 
   Widget _buildOrderCard(Map<String, dynamic> order) {
-    bool isWarning = order['timeRemaining'] < 300; // Kurang dari 5 menit warning
+    bool isWarning = (order['timeRemaining'] ?? 0) < 300;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(order['id'], style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: primaryMaroon)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isWarning ? Colors.red[50] : Colors.orange[50], 
-                  borderRadius: BorderRadius.circular(8)
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.timer_outlined, color: isWarning ? Colors.red : Colors.orange, size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      _formatTime(order['timeRemaining']), 
-                      style: TextStyle(color: isWarning ? Colors.red : Colors.orange, fontWeight: FontWeight.bold, fontSize: 12)
-                    ),
-                  ],
-                ),
-              )
-            ],
-          ),
-          const SizedBox(height: 5),
-          Text(order['name'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1)),
-          
-          ...List<Widget>.from(order['items'].map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 5),
-            child: Row(
+    return GestureDetector(
+      onTap: () => _showOrderDetail(order),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5))],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(item['name'], style: const TextStyle(color: Colors.black87)),
-                Text(item['price'], style: const TextStyle(color: Colors.black54, fontSize: 13)),
+                Text(order['nomor_antrian'] ?? '', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: primaryMaroon)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isWarning ? Colors.red[50] : Colors.orange[50], 
+                    borderRadius: BorderRadius.circular(8)
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.timer_outlined, color: isWarning ? Colors.red : Colors.orange, size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        _formatTime(order['timeRemaining'] ?? 0), 
+                        style: TextStyle(color: isWarning ? Colors.red : Colors.orange, fontWeight: FontWeight.bold, fontSize: 12)
+                      ),
+                    ],
+                  ),
+                )
               ],
             ),
-          ))),
+            const SizedBox(height: 5),
+            Text(order['name'] ?? '', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Divider(height: 1)),
+            
+            ...List<Widget>.from((order['items'] as List? ?? []).map((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 5),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(item['name'] ?? '', style: const TextStyle(color: Colors.black87)),
+                  Text(item['price'] ?? '', style: const TextStyle(color: Colors.black54, fontSize: 13)),
+                ],
+              ),
+            ))),
 
-          const SizedBox(height: 15),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("Total Bayar", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-              Text("Rp ${order['total']}", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: darkCard)),
-            ],
-          ),
-          const SizedBox(height: 15),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[50],
-                    foregroundColor: Colors.red,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Total Bayar", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                Text("Rp ${order['total']}", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: darkCard)),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red[50],
+                      foregroundColor: Colors.red,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                    ),
+                    onPressed: () => _tolakPesanan(order),
+                    child: const Text("Tolak"),
                   ),
-                  onPressed: () => _tolakPesanan(order['id']),
-                  child: const Text("Tolak"),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                    ),
+                    onPressed: () => _tampilkanModalPembayaran(order),
+                    child: const Text("Terima & Bayar"),
                   ),
-                  onPressed: () => _tampilkanModalPembayaran(order),
-                  child: const Text("Terima & Bayar"),
                 ),
-              ),
-            ],
-          )
-        ],
+              ],
+            )
+          ],
+        ),
       ),
     );
   }

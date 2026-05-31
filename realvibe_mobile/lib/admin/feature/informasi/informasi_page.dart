@@ -206,18 +206,15 @@ class _BannerBoardState extends State<_BannerBoard> {
 
   @override
   Widget build(BuildContext context) {
-    final boardPadding = isMobile ? 14.0 : 22.0;
-    final bannerSpacing = isMobile ? 12.0 : 18.0;
-    final bannerRunSpacing = isMobile ? 12.0 : 16.0;
-    final actionButtonSize = isMobile ? 78.0 : 70.0;
+    final boardPadding = widget.isMobile ? 14.0 : 22.0;
+    final bannerSpacing = widget.isMobile ? 12.0 : 18.0;
+    final bannerRunSpacing = widget.isMobile ? 12.0 : 16.0;
+    final actionButtonSize = widget.isMobile ? 78.0 : 70.0;
 
     return Container(
-      width: width,
-      height: isMobile ? null : max(360, width * 0.6),
-      padding: EdgeInsets.all(boardPadding),
       width: widget.width,
-      height: max(360, widget.width * 0.6),
-      padding: const EdgeInsets.all(22),
+      height: widget.isMobile ? null : max(360, widget.width * 0.6),
+      padding: EdgeInsets.all(boardPadding),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
@@ -241,22 +238,6 @@ class _BannerBoardState extends State<_BannerBoard> {
               return Wrap(
                 spacing: bannerSpacing,
                 runSpacing: bannerRunSpacing,
-                children: [
-                  _BannerCard(
-                    imagePath: 'assets/images/banner1.png',
-                    width: cardWidth,
-                  ),
-                  _BannerCard(
-                    imagePath: 'assets/images/banner2.png',
-                    width: cardWidth,
-                  ),
-                  _BannerCard(
-                    imagePath: 'assets/images/banner3.png',
-                    width: cardWidth,
-                  ),
-                ],
-                spacing: spacing,
-                runSpacing: 16,
                 children: _informasi.map((item) => _BannerCard(
                   imageUrl: _getImageUrl(item.gambar),
                   width: cardWidth,
@@ -266,7 +247,7 @@ class _BannerBoardState extends State<_BannerBoard> {
               );
             },
           ),
-          SizedBox(height: isMobile ? 14 : 18),
+          SizedBox(height: widget.isMobile ? 14 : 18),
           Align(
             alignment: Alignment.centerRight,
             child: InkWell(
@@ -298,13 +279,13 @@ class _BannerBoardState extends State<_BannerBoard> {
                     Icon(
                       Icons.add_a_photo,
                       color: Colors.white,
-                      size: isMobile ? 24 : 22,
+                      size: widget.isMobile ? 24 : 22,
                     ),
-                    SizedBox(height: isMobile ? 6 : 4),
+                    SizedBox(height: widget.isMobile ? 6 : 4),
                     Text(
                       '+Tambah Foto',
                       style: TextStyle(
-                        fontSize: isMobile ? 10 : 9,
+                        fontSize: widget.isMobile ? 10 : 9,
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),
