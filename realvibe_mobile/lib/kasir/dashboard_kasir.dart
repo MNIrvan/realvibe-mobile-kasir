@@ -432,10 +432,18 @@ class _RevenueDashboardState extends State<RevenueDashboard> {
       spacing: 12,
       runSpacing: 12,
       children: [
-        _actionBtn(Icons.add_shopping_cart, "Buka POS (Kasir)", Colors.green, () {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fitur POS akan dibuka.")));
+        _actionBtn(Icons.add_shopping_cart, "Buka Kasir", Colors.green, () {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fitur Buka Kasir.")));
         }),
-        _actionBtn(Icons.print_rounded, "Cetak Laporan", Colors.orange, () {}),
+        _actionBtn(Icons.no_meals, "Tutup Kasir", Colors.redAccent, () {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fitur Tutup Kasir.")));
+        }),
+        _actionBtn(Icons.inventory_2_outlined, "Produk", Colors.blue, () {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fitur Produk.")));
+        }),
+        _actionBtn(Icons.print_rounded, "Cetak", Colors.orange, () {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Fitur Cetak.")));
+        }),
       ],
     );
   }
@@ -451,14 +459,14 @@ class _RevenueDashboardState extends State<RevenueDashboard> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.5)),
+            border: Border.all(color: color.withOpacity(0.4), width: 1.5),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 18, color: color),
               const SizedBox(width: 8),
-              Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87)),
             ],
           ),
         ),

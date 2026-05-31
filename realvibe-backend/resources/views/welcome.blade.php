@@ -14,6 +14,7 @@ $page = request('page', 'menu');
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
             :root { 
@@ -406,6 +407,16 @@ $page = request('page', 'menu');
                     <div id="kategoriContainer" class="d-flex gap-3 overflow-auto pb-2" style="scrollbar-width: none; -ms-overflow-style: none;"></div>
                 </div>
 
+                <div id="menuTeratasSection" class="px-2 mb-4" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-bold m-0" style="font-size: 1.15rem; color: #2D1A1A;">Menu teratas</h4>
+                        <span class="badge text-danger fw-normal px-3 py-2" style="background-color: #F9EBEB; border-radius: 12px; cursor: pointer; font-size: 0.75rem;" onclick="setKategori('all')">Lihat semua ></span>
+                    </div>
+                    <div id="menuTeratasContainer" class="d-flex gap-3 overflow-auto pb-3" style="scrollbar-width: none; -ms-overflow-style: none; padding-right: 10px;">
+                        <!-- JS injected -->
+                    </div>
+                </div>
+
                 <div class="px-2">
                     <h6 id="menuTitle" class="fw-bold mb-3"></h6>
                     <div id="menuGrid" class="row g-3"></div>
@@ -503,7 +514,7 @@ $page = request('page', 'menu');
                             <i class="fas fa-arrow-left text-danger"></i>
                         </button>
                         <div class="ms-3 z-3">
-                            <div style="font-weight: 800; font-size: 1.2rem; font-style: italic;">Real-Vibe</div>
+                            <div style="font-weight: 800; font-size: 1.4rem; font-style: italic;">Real-Vibe</div>
                             <h4 class="fw-bold m-0">Pesananmu</h4>
                         </div>
                     </div>
@@ -578,33 +589,7 @@ $page = request('page', 'menu');
             </div>
         </div>
 
-        {{-- POPUP: Pesanan Diterima --}}
-        <div class="modal fade" id="pesananDiterimaModal" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content text-center border-0" style="border-radius: 25px;">
-                    <div class="modal-body p-5">
-                        <div style="width: 80px; height: 80px; background: #28a745; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;"><i class="fas fa-check fa-2x text-white"></i></div>
-                        <h5 class="fw-bold">Pesanan Diterima!</h5>
-                        <p class="text-muted small">Pesananmu sedang dimasak, tunggu beberapa menit kemudian pesananmu akan datang. Terima kasih sudah memesan!</p>
-                        <button class="btn px-5 py-2 fw-bold text-white" style="border-radius: 12px; background: #28a745;" onclick="closePesananDiterima()">OK</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- POPUP: Pesanan Ditolak --}}
-        <div class="modal fade" id="pesananDitolakModal" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content text-center border-0" style="border-radius: 25px;">
-                    <div class="modal-body p-5">
-                        <div style="width: 80px; height: 80px; background: #dc3545; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;"><i class="fas fa-times fa-2x text-white"></i></div>
-                        <h5 class="fw-bold">Pesanan Dibatalkan</h5>
-                        <p class="text-muted small">Mohon maaf pesananmu dibatalkan. Silahkan pilih menu lagi sesuai yang kamu inginkan.</p>
-                        <button class="btn px-5 py-2 fw-bold text-white" style="border-radius: 12px; background: #dc3545;" onclick="closePesananDitolak()">OK</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {{-- SweetAlert2 digunakan untuk popup diterima/ditolak (tidak perlu HTML modal) --}}
 
         <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
@@ -734,6 +719,7 @@ $page = request('page', 'menu');
         function renderMenuGrid() {
             const grid = document.getElementById('menuGrid');
             const title = document.getElementById('menuTitle');
+            const teratasSec = document.getElementById('menuTeratasSection');
             if (!grid) return;
 
             let filtered;
@@ -742,9 +728,16 @@ $page = request('page', 'menu');
                 if (title) title.textContent = `Hasil pencarian: '${searchQuery}'`;
                 const promoSection = document.getElementById('promoCarouselSection');
                 if (promoSection) promoSection.style.display = 'none';
+                if (teratasSec) teratasSec.style.display = 'none';
             } else {
-                filtered = ALL_MENUS.filter(m => (m.kategori || '').trim().toLowerCase() === activeKategori);
-                if (title) title.textContent = `Menu ${activeKategori.charAt(0).toUpperCase() + activeKategori.slice(1)}`;
+                if (activeKategori === 'all') {
+                    filtered = ALL_MENUS;
+                    if (title) title.textContent = 'Semua Menu';
+                } else {
+                    filtered = ALL_MENUS.filter(m => (m.kategori || '').trim().toLowerCase() === activeKategori);
+                    if (title) title.textContent = `Menu ${activeKategori.charAt(0).toUpperCase() + activeKategori.slice(1)}`;
+                }
+                if (teratasSec) teratasSec.style.display = activeKategori === 'all' ? 'block' : 'none';
             }
 
             if (filtered.length === 0) {
@@ -756,7 +749,7 @@ $page = request('page', 'menu');
                 const imgUrl = API_IMAGE_BASE + '/' + m.gambar;
                 const hargaFormatted = formatRp(m.harga);
                 return `<div class="col-6">
-                    <div class="card menu-card" onclick="openDetail('${m.nama_menu.replace(/'/g, "\\'")  }', ${m.harga}, '${imgUrl}', 'Stok: ${m.stok}', '${m.stok}')">
+                    <div class="card menu-card" onclick="openDetail('${m.nama_menu.replace(/'/g, "\\'")}', ${m.harga}, '${imgUrl}', 'Stok: ${m.stok}', '${m.stok}')">
                         <img src="${imgUrl}" class="mx-auto mt-2" onerror="this.src='https://via.placeholder.com/150'">
                         <div class="card-body p-2 mt-2">
                             <div class="fw-bold small">${m.nama_menu}</div>
@@ -764,6 +757,29 @@ $page = request('page', 'menu');
                             <div class="text-danger fw-bold mb-2">Rp ${hargaFormatted}</div>
                             <button class="btn btn-tambah py-1" onclick="event.stopPropagation(); quickAdd(this, '${m.nama_menu.replace(/'/g, "\\'") }', ${m.harga}, '${imgUrl}')">+ Tambah</button>
                         </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderMenuTeratas() {
+            const container = document.getElementById('menuTeratasContainer');
+            if (!container) return;
+            // Ambil maksimal 5 menu dengan jumlah terjual terbanyak
+            const topMenus = [...ALL_MENUS].sort((a, b) => (b.total_terjual || 0) - (a.total_terjual || 0)).slice(0, 5); 
+            
+            container.innerHTML = topMenus.map(m => {
+                const imgUrl = API_IMAGE_BASE + '/' + m.gambar;
+                const hargaFormatted = formatRp(m.harga);
+                return `<div class="card shadow-sm" style="min-width: 155px; border-radius: 18px; border: none; cursor:pointer;" onclick="openDetail('${m.nama_menu.replace(/'/g, "\\'")}', ${m.harga}, '${imgUrl}', 'Stok: ${m.stok}', '${m.stok}')">
+                    <div style="padding: 10px;">
+                        <img src="${imgUrl}" style="width: 135px; height: 135px; object-fit: cover; border-radius: 12px;" class="mx-auto d-block" onerror="this.src='https://via.placeholder.com/135'">
+                    </div>
+                    <div class="card-body p-2 pt-0 d-flex flex-column text-center">
+                        <div class="fw-bold" style="font-size: 0.95rem; color: #3A231C; text-align: left;">${m.nama_menu}</div>
+                        <div class="text-muted mb-2" style="font-size: 0.65rem; text-align: left;">Stok: ${m.stok} Tersedia</div>
+                        <div class="fw-bold mb-3" style="color: #E27F00; font-size: 0.9rem; text-align: left;">Rp. ${hargaFormatted},00</div>
+                        <button class="btn btn-tambah w-100 py-1" style="font-size: 0.85rem; border-radius: 20px; background: #C42F1A; color: white;" onclick="event.stopPropagation(); quickAdd(this, '${m.nama_menu.replace(/'/g, "\\'")}', ${m.harga}, '${imgUrl}')">+ Tambah</button>
                     </div>
                 </div>`;
             }).join('');
@@ -916,6 +932,7 @@ $page = request('page', 'menu');
                 activeKategori = ALL_KATEGORIS[0].nama_kategori.trim().toLowerCase();
             }
             renderKategoriButtons();
+            renderMenuTeratas();
             renderMenuGrid();
             updateCartBadge();
 
@@ -976,7 +993,7 @@ $page = request('page', 'menu');
         if (btnSubmitOrder) {
             btnSubmitOrder.addEventListener('click', function() {
                 const nama = document.getElementById('inputNamaPemesan').value.trim();
-                if (!nama) { alert('Nama pemesan wajib diisi!'); return; }
+                if (!nama) { Swal.fire({ icon: 'warning', title: 'Oops!', text: 'Nama pemesan wajib diisi!', confirmButtonColor: '#C42F1A' }); return; }
 
                 const cart = getCart();
                 if (cart.length === 0) return;
@@ -1004,7 +1021,7 @@ $page = request('page', 'menu');
                     this.innerText = 'PESAN SEKARANG';
 
                     if (!data.success) {
-                        alert(data.message || 'Gagal membuat pesanan.');
+                        Swal.fire({ icon: 'error', title: 'Gagal!', text: data.message || 'Gagal membuat pesanan.', confirmButtonColor: '#C42F1A' });
                         return;
                     }
 
@@ -1023,7 +1040,7 @@ $page = request('page', 'menu');
                     console.error(err);
                     this.disabled = false;
                     this.innerText = 'PESAN SEKARANG';
-                    alert('Terjadi kesalahan jaringan.');
+                    Swal.fire({ icon: 'error', title: 'Error!', text: 'Terjadi kesalahan jaringan.', confirmButtonColor: '#C42F1A' });
                 });
             });
         }
@@ -1093,15 +1110,30 @@ $page = request('page', 'menu');
                         if (d.status === 'diproses') {
                             stopPolling();
                             clearInterval(countdownInterval);
-                            // Show diterima popup
-                            var m = new bootstrap.Modal(document.getElementById('pesananDiterimaModal'));
-                            m.show();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Pesanan Diterima! 🎉',
+                                html: '<p style="color:#666;">Pesananmu sedang dimasak, tunggu beberapa menit kemudian pesananmu akan datang.<br><br><strong>Terima kasih sudah memesan!</strong></p>',
+                                confirmButtonText: 'OK, Mengerti!',
+                                confirmButtonColor: '#28a745',
+                                allowOutsideClick: false
+                            }).then(() => {
+                                document.getElementById('pesananStatusBox').innerHTML = '<div style="color: #28a745;"><i class="fas fa-check-circle fa-2x mb-2"></i><p class="fw-bold mb-0">Pesanan sedang dimasak!</p><p class="text-muted small">Silakan tunggu dan lakukan pembayaran di kasir.</p></div>';
+                            });
                         } else if (d.status === 'batal') {
                             stopPolling();
                             clearInterval(countdownInterval);
-                            // Show ditolak popup
-                            var m = new bootstrap.Modal(document.getElementById('pesananDitolakModal'));
-                            m.show();
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Pesanan Dibatalkan 😔',
+                                html: '<p style="color:#666;">Mohon maaf pesananmu dibatalkan.<br>Silahkan pilih menu lagi sesuai yang kamu inginkan.</p>',
+                                confirmButtonText: 'OK, Kembali ke Menu',
+                                confirmButtonColor: '#dc3545',
+                                allowOutsideClick: false
+                            }).then(() => {
+                                closePesananmuScreen();
+                                window.location.href = '/?page=menu';
+                            });
                         }
                     }).catch(() => {});
             }, 3000);
@@ -1116,18 +1148,7 @@ $page = request('page', 'menu');
             activePesananId = null;
         }
 
-        function closePesananDiterima() {
-            bootstrap.Modal.getInstance(document.getElementById('pesananDiterimaModal'))?.hide();
-            // Stay on pesananmu screen - do nothing extra
-            document.getElementById('pesananStatusBox').innerHTML = '<div style="color: #28a745;"><i class="fas fa-check-circle fa-2x mb-2"></i><p class="fw-bold mb-0">Pesanan sedang dimasak!</p><p class="text-muted small">Silakan tunggu dan lakukan pembayaran di kasir.</p></div>';
-        }
-
-        function closePesananDitolak() {
-            bootstrap.Modal.getInstance(document.getElementById('pesananDitolakModal'))?.hide();
-            closePesananmuScreen();
-            // Redirect ke menu
-            window.location.href = '/?page=menu';
-        }
+        // closePesananDiterima & closePesananDitolak now handled by SweetAlert2 .then() callbacks above
 
         function selectPayment(el) {
             document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('active'));
