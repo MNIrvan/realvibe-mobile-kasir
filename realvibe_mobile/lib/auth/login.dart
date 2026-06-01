@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../dashboard/dashboard_page.dart';
 import '../kasir/dashboard_kasir.dart';
+import '../kasir/cashier_models.dart';
 import '../admin/dashboard_admin.dart';
 import '../dashboardCs.dart';
 
@@ -70,7 +71,11 @@ class _LoginPageState extends State<LoginPage> {
 
         Widget targetPage;
         if (role == 'kasir') {
-          targetPage = const RevenueDashboard();
+          targetPage = RevenueDashboard(
+            cashierUser: CashierUser.fromJson(
+              data['data'] as Map<String, dynamic>,
+            ),
+          );
         } else if (role == 'admin') {
           targetPage = const AdminDashboard();
         } else if (role == 'customer') {

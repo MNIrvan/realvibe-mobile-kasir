@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\InformasiController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\CashierSessionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,25 +61,12 @@ Route::prefix('admin')->group(function () {
     Route::apiResource('users', UserController::class);
 });
 
-// Image serving route with CORS
-Route::get('/image/{folder}/{filename}', function ($folder, $filename) {
-    $path = storage_path('app/public/' . $folder . '/' . $filename);
-    if (!file_exists($path)) {
-        abort(404);
-    }
-    return response()->file($path, [
-        'Access-Control-Allow-Origin' => '*',
-        'Access-Control-Allow-Methods' => 'GET, OPTIONS',
-    ]);
-});
-
-// Checkout Web Customer (rate limited: max 3 per menit per IP)
-Route::middleware('throttle:3,1')->post('/checkout', [CheckoutController::class, 'checkout']);
-Route::get('/checkout/status/{id}', [CheckoutController::class, 'status']);
-
-// Kasir - Antrean Pesanan Web
-Route::prefix('kasir')->group(function () {
-    Route::get('/pesanan', [CheckoutController::class, 'kasirIndex']);
-    Route::post('/pesanan/{id}/terima', [CheckoutController::class, 'terima']);
-    Route::post('/pesanan/{id}/tolak', [CheckoutController::class, 'tolak']);
+// Cashier Session Routes
+Route::prefix('cashier-sessions')->group(function () {
+    Route::get('/active', [CashierSessionController::class, 'active']);
+    Route::post('/open', [CashierSessionController::class, 'open']);
+    Route::post('/{sessionId}/close', [CashierSessionController::class, 'close']);
+    Route::post('/{sessionId}/entries', [CashierSessionController::class, 'addEntry']);
+    Route::put('/{sessionId}/entries/{entryId}', [CashierSessionController::class, 'updateEntry']);
+    Route::delete('/{sessionId}/entries/{entryId}', [CashierSessionController::class, 'deleteEntry']);
 });
