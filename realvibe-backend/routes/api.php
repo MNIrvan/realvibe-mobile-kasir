@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\InformasiController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\CashierSessionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,4 +58,12 @@ Route::prefix('admin')->group(function () {
     Route::put('/masukan/{id}/read', [FeedbackController::class, 'markAsRead']);
 
     Route::apiResource('users', UserController::class);
+});
+
+// Cashier Session Routes
+Route::prefix('cashier-sessions')->group(function () {
+    Route::get('/active', [CashierSessionController::class, 'active']);
+    Route::post('/open', [CashierSessionController::class, 'open']);
+    Route::post('/{sessionId}/close', [CashierSessionController::class, 'close']);
+    Route::post('/{sessionId}/entries', [CashierSessionController::class, 'addEntry']);
 });
