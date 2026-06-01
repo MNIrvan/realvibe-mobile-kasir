@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:http/http.dart' as http;
+import '../auth/login.dart';
 
 class RevenueDashboard extends StatefulWidget {
   const RevenueDashboard({super.key});
@@ -80,6 +81,26 @@ class _RevenueDashboardState extends State<RevenueDashboard> {
     int minutes = seconds ~/ 60;
     int remainingSeconds = seconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  String _getFormattedDate() {
+    final now = DateTime.now();
+    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    final dayName = days[now.weekday - 1];
+    final monthName = months[now.month - 1];
+    return '$dayName, ${now.day} $monthName ${now.year}';
+  }
+
+  String _getFormattedTime() {
+    final now = DateTime.now();
+    final hour = now.hour.toString().padLeft(2, '0');
+    final minute = now.minute.toString().padLeft(2, '0');
+    final second = now.second.toString().padLeft(2, '0');
+    return '$hour:$minute:$second';
   }
 
   // --- TERIMA PESANAN ---
@@ -325,7 +346,29 @@ class _RevenueDashboardState extends State<RevenueDashboard> {
                   )
                 ],
               ),
-              const Text('Real-Vibe', style: TextStyle(color: Colors.white24, fontSize: 28, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic))
+              Row(
+                children: [
+                  const Text('Real-Vibe', style: TextStyle(color: Colors.white24, fontSize: 28, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic)),
+                  const SizedBox(width: 20),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.logout_rounded, color: Colors.white),
+                      tooltip: 'Keluar',
+                      onPressed: () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginPage()),
+                          (route) => false,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              )
             ],
           ),
         ),
@@ -374,10 +417,23 @@ class _RevenueDashboardState extends State<RevenueDashboard> {
         boxShadow: [BoxShadow(color: primaryMaroon.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
       ),
       child: Row(
-        children: const [
-          Icon(Icons.calendar_month_rounded, color: Colors.white),
-          SizedBox(width: 15),
-          Text('Hari Ini', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.calendar_month_rounded, color: Colors.white),
+              SizedBox(width: 15),
+              Text('Hari Ini', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(_getFormattedDate(), style: const TextStyle(color: Colors.white70, fontSize: 14)),
+              const SizedBox(height: 2),
+              Text(_getFormattedTime(), style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            ],
+          ),
         ],
       ),
     );

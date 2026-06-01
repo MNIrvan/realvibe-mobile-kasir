@@ -83,32 +83,31 @@ class DashboardSidebar extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                        SizedBox(
-                          height: 20,
-                          child: FittedBox(
-                            alignment: Alignment.centerLeft,
-                            fit: BoxFit.contain,
-                            child: Image.asset(
-                              'assets/icons/textrealvibe.png',
+                            SizedBox(
+                              height: 20,
+                              child: FittedBox(
+                                alignment: Alignment.centerLeft,
+                                fit: BoxFit.contain,
+                                child: Image.asset(
+                                  'assets/icons/textrealvibe.png',
                                   filterQuality: FilterQuality.high,
                                 ),
                               ),
                             ),
                             const SizedBox(height: 4),
                             const Text(
-                              'Real Cafe Djatirto',
-                              style:
-                                  TextStyle(color: Colors.white70, fontSize: 12),
+                              'Real Cafe Jatiroto',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),
                       ),
                       IconButton(
                         onPressed: onToggle,
-                        icon: const Icon(
-                          Icons.menu,
-                          color: Colors.white,
-                        ),
+                        icon: const Icon(Icons.menu, color: Colors.white),
                       ),
                     ],
                   ),
