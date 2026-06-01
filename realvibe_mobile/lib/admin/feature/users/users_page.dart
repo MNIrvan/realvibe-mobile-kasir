@@ -145,13 +145,7 @@ class _UsersHeader extends StatelessWidget {
       child: Row(
         children: [
           if (onOpenDrawer != null)
-            IconButton(
-              constraints: const BoxConstraints(),
-              padding: EdgeInsets.zero,
-              onPressed: onOpenDrawer,
-              icon: const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
-            ),
-          if (isMobile) const SizedBox(width: 10),
+            if (isMobile) const SizedBox(width: 10),
           const Expanded(
             child: Text(
               'Welcome Admin !',

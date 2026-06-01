@@ -48,6 +48,8 @@ Route::prefix('kereta')->group(function () {
 Route::prefix('admin')->group(function () {
     Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
     Route::get('/dashboard/chart', [DashboardController::class, 'chart']);
+    Route::get('/dashboard/trending', [DashboardController::class, 'trending']);
+    Route::get('/dashboard/notifications', [DashboardController::class, 'notifications']);
 
     Route::get('/laporan', [TransactionController::class, 'index']);
     Route::get('/laporan/export', [TransactionController::class, 'export']);

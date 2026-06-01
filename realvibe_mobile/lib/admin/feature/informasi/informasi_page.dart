@@ -5,12 +5,9 @@ import 'package:flutter/material.dart';
 import '../../modal/form_informasi/form_informasi.dart';
 import 'informasi_model.dart';
 import 'informasi_service.dart';
+
 class InformasiPage extends StatelessWidget {
-  const InformasiPage({
-    super.key,
-    required this.isMobile,
-    this.onOpenDrawer,
-  });
+  const InformasiPage({super.key, required this.isMobile, this.onOpenDrawer});
 
   final bool isMobile;
   final VoidCallback? onOpenDrawer;
@@ -33,10 +30,7 @@ class InformasiPage extends StatelessWidget {
             builder: (context, constraints) {
               final targetWidth = min(constraints.maxWidth, 720.0);
               return Center(
-                child: _BannerBoard(
-                  isMobile: isMobile,
-                  width: targetWidth,
-                ),
+                child: _BannerBoard(isMobile: isMobile, width: targetWidth),
               );
             },
           ),
@@ -70,13 +64,7 @@ class _InformasiHeader extends StatelessWidget {
       child: Row(
         children: [
           if (onOpenDrawer != null)
-            IconButton(
-              constraints: const BoxConstraints(),
-              padding: EdgeInsets.zero,
-              onPressed: onOpenDrawer,
-              icon: const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
-            ),
-          if (isMobile) const SizedBox(width: 10),
+            if (isMobile) const SizedBox(width: 10),
           const Expanded(
             child: Text(
               'Welcome Admin !',
@@ -109,14 +97,8 @@ class _HeaderSearch extends StatelessWidget {
           ),
           hintText: 'Telusuri disini',
           hintStyle: const TextStyle(color: Color(0xFF8A8A8A)),
-          prefixIcon: const Icon(
-            Icons.menu,
-            color: Color(0xFF8A8A8A),
-          ),
-          suffixIcon: const Icon(
-            Icons.search,
-            color: Color(0xFF8A8A8A),
-          ),
+          prefixIcon: const Icon(Icons.menu, color: Color(0xFF8A8A8A)),
+          suffixIcon: const Icon(Icons.search, color: Color(0xFF8A8A8A)),
           filled: true,
           fillColor: const Color(0xFFF5F1EE),
           border: OutlineInputBorder(
@@ -149,10 +131,7 @@ class _InformasiTitle extends StatelessWidget {
 }
 
 class _BannerBoard extends StatefulWidget {
-  const _BannerBoard({
-    required this.isMobile,
-    required this.width,
-  });
+  const _BannerBoard({required this.isMobile, required this.width});
 
   final bool isMobile;
   final double width;
@@ -199,8 +178,8 @@ class _BannerBoardState extends State<_BannerBoard> {
     final host = kIsWeb
         ? '127.0.0.1'
         : defaultTargetPlatform == TargetPlatform.android
-            ? '10.0.2.2'
-            : '127.0.0.1';
+        ? '10.0.2.2'
+        : '127.0.0.1';
     return 'http://$host:8000/storage/$path';
   }
 
@@ -223,30 +202,37 @@ class _BannerBoardState extends State<_BannerBoard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _isLoading 
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFF8F1A1A)))
+          _isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF8F1A1A)),
+                )
               : LayoutBuilder(
-            builder: (context, constraints) {
-              final availableWidth = constraints.maxWidth;
-              final columns = availableWidth > 560
-                  ? 3
-                  : availableWidth > 380
-                      ? 2
-                      : 1;
-              final cardWidth =
-                  (availableWidth - (columns - 1) * bannerSpacing) / columns;
-              return Wrap(
-                spacing: bannerSpacing,
-                runSpacing: bannerRunSpacing,
-                children: _informasi.map((item) => _BannerCard(
-                  imageUrl: _getImageUrl(item.gambar),
-                  width: cardWidth,
-                  isActive: item.isActive,
-                  onToggle: () => _toggleStatus(item),
-                )).toList(),
-              );
-            },
-          ),
+                  builder: (context, constraints) {
+                    final availableWidth = constraints.maxWidth;
+                    final columns = availableWidth > 560
+                        ? 3
+                        : availableWidth > 380
+                        ? 2
+                        : 1;
+                    final cardWidth =
+                        (availableWidth - (columns - 1) * bannerSpacing) /
+                        columns;
+                    return Wrap(
+                      spacing: bannerSpacing,
+                      runSpacing: bannerRunSpacing,
+                      children: _informasi
+                          .map(
+                            (item) => _BannerCard(
+                              imageUrl: _getImageUrl(item.gambar),
+                              width: cardWidth,
+                              isActive: item.isActive,
+                              onToggle: () => _toggleStatus(item),
+                            ),
+                          )
+                          .toList(),
+                    );
+                  },
+                ),
           SizedBox(height: widget.isMobile ? 14 : 18),
           Align(
             alignment: Alignment.centerRight,
@@ -329,16 +315,25 @@ class _BannerCard extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(6),
-            child: imageUrl.isEmpty 
-              ? const Center(child: Icon(Icons.image_not_supported, color: Colors.grey))
-              : Image.network(imageUrl, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.error)),
+            child: imageUrl.isEmpty
+                ? const Center(
+                    child: Icon(Icons.image_not_supported, color: Colors.grey),
+                  )
+                : Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (c, e, s) => const Icon(Icons.error),
+                  ),
           ),
         ),
         const SizedBox(height: 6),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(isActive ? 'Aktif' : 'Nonaktif', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            Text(
+              isActive ? 'Aktif' : 'Nonaktif',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
             Switch(
               value: isActive,
               onChanged: (_) => onToggle(),

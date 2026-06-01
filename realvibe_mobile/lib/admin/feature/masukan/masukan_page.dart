@@ -85,32 +85,36 @@ class _MasukanPageState extends State<MasukanPage> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFFDAC2B8)),
               ),
-              child: _isLoading 
-                ? const Center(child: Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: CircularProgressIndicator(color: Color(0xFF8F1A1A)),
-                  ))
-                : Column(
-                children: [
-                  ..._filteredItems
-                      .map(
-                        (item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _FeedbackCard(
-                            name: item.namaPelanggan,
-                            date: item.createdAt,
-                            rating: item.rating,
-                            message: item.pesan,
-                            isRead: item.isRead,
-                            onRead: () => _markAsRead(item),
-                          ),
+              child: _isLoading
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF8F1A1A),
                         ),
-                      )
-                      .toList(),
-                  const SizedBox(height: 4),
-                  const _PaginationBar(),
-                ],
-              ),
+                      ),
+                    )
+                  : Column(
+                      children: [
+                        ..._filteredItems
+                            .map(
+                              (item) => Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: _FeedbackCard(
+                                  name: item.namaPelanggan,
+                                  date: item.createdAt,
+                                  rating: item.rating,
+                                  message: item.pesan,
+                                  isRead: item.isRead,
+                                  onRead: () => _markAsRead(item),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        const SizedBox(height: 4),
+                        const _PaginationBar(),
+                      ],
+                    ),
             ),
           ),
         ],
@@ -150,13 +154,7 @@ class _MasukanHeader extends StatelessWidget {
       child: Row(
         children: [
           if (onOpenDrawer != null)
-            IconButton(
-              constraints: const BoxConstraints(),
-              padding: EdgeInsets.zero,
-              onPressed: onOpenDrawer,
-              icon: const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
-            ),
-          if (isMobile) const SizedBox(width: 10),
+            if (isMobile) const SizedBox(width: 10),
           const Expanded(
             child: Text(
               'Welcome Admin !',
@@ -168,10 +166,7 @@ class _MasukanHeader extends StatelessWidget {
             ),
           ),
           if (!isMobile)
-            _HeaderSearch(
-              controller: controller,
-              onChanged: onChanged,
-            ),
+            _HeaderSearch(controller: controller, onChanged: onChanged),
         ],
       ),
     );
@@ -179,10 +174,7 @@ class _MasukanHeader extends StatelessWidget {
 }
 
 class _HeaderSearch extends StatelessWidget {
-  const _HeaderSearch({
-    required this.controller,
-    required this.onChanged,
-  });
+  const _HeaderSearch({required this.controller, required this.onChanged});
 
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
@@ -387,7 +379,10 @@ class _FeedbackCard extends StatelessWidget {
                 InkWell(
                   onTap: onRead,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF17C39A),
                       borderRadius: BorderRadius.circular(4),
@@ -404,7 +399,10 @@ class _FeedbackCard extends StatelessWidget {
                 )
               else
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(4),
@@ -438,7 +436,7 @@ class _FeedbackCard extends StatelessWidget {
 extension on _MasukanPageState {
   List<MasukanModel> get _filteredItems {
     var items = _masukanData;
-    
+
     // Sort logic based on filter
     if (selectedFilter == 'Terbaru') {
       items.sort((a, b) => b.createdAt.compareTo(a.createdAt));

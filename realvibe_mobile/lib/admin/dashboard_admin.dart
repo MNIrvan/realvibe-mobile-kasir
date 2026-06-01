@@ -209,54 +209,87 @@ class _DashboardBody extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Wrap(
-                  runSpacing: 12,
-                  spacing: 12,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: isMobile ? double.infinity : 240,
-                      child: Text(
-                        'Welcome Admin !',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF2A1E1A),
-                        ),
+                isMobile
+                    ? Wrap(
+                        runSpacing: 12,
+                        spacing: 12,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: Text(
+                              'Welcome Admin !',
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF2A1E1A),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextField(
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                  horizontal: 18,
+                                ),
+                                hintText: 'Telusuri disini',
+                                hintStyle: const TextStyle(
+                                  color: Color(0xFF8A8A8A),
+                                ),
+                                suffixIcon: const Icon(
+                                  Icons.search,
+                                  color: Color(0xFF8A8A8A),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF5F1EE),
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide.none,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Welcome Admin !',
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF2A1E1A),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: isTablet ? screenWidth * 0.4 : 420,
+                            child: TextField(
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                  horizontal: 18,
+                                ),
+                                hintText: 'Telusuri disini',
+                                hintStyle: const TextStyle(
+                                  color: Color(0xFF8A8A8A),
+                                ),
+                                suffixIcon: const Icon(
+                                  Icons.search,
+                                  color: Color(0xFF8A8A8A),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xFFF5F1EE),
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide.none,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    SizedBox(
-                      width: isMobile
-                          ? double.infinity
-                          : (isTablet ? screenWidth * 0.4 : 420),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 14,
-                            horizontal: 18,
-                          ),
-                          hintText: 'Telusuri disini',
-                          hintStyle: const TextStyle(
-                            color: Color(0xFF8A8A8A),
-                          ),
-                          prefixIcon: const Icon(
-                            Icons.menu,
-                            color: Color(0xFF8A8A8A),
-                          ),
-                          suffixIcon: const Icon(
-                            Icons.search,
-                            color: Color(0xFF8A8A8A),
-                          ),
-                          filled: true,
-                          fillColor: const Color(0xFFF5F1EE),
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
@@ -281,7 +314,7 @@ class _DashboardBody extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      flex: isTablet ? 3 : 2,
+                      flex: 3,
                       child: Column(
                         children: [
                           _ChartCard(isMobile: isMobile),
@@ -399,6 +432,7 @@ class _DashboardMetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 100,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
         color: const Color(0xFF8F1A1A),
@@ -423,27 +457,32 @@ class _DashboardMetricCard extends StatelessWidget {
             child: Icon(icon, color: const Color(0xFF8F1A1A), size: 26),
           ),
           const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white70,
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white70,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -458,10 +497,11 @@ class _RevenueSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+      height: 100,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFF9E2323), width: 2),
         boxShadow: [
           BoxShadow(
@@ -471,26 +511,43 @@ class _RevenueSummaryCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
-          const Icon(Icons.currency_exchange, color: Color(0xFF8F1A1A), size: 38),
-          const SizedBox(height: 8),
-          Text(
-            'Rp. ${pendapatan.toString()}',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF351B1B),
+          Container(
+            height: 52,
+            width: 52,
+            decoration: BoxDecoration(
+              color: const Color(0xFF8F1A1A).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: const Icon(Icons.currency_exchange, color: Color(0xFF8F1A1A), size: 26),
           ),
-          const SizedBox(height: 2),
-          const Text(
-            'Total Pendapatan (Hari Ini)',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF8B8B8B),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Rp. $pendapatan',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF351B1B),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Pendapatan (Hari Ini)',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF8B8B8B),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
         ],
@@ -578,66 +635,30 @@ class _DashboardSummaryPanelState extends State<_DashboardSummaryPanel> {
         ],
       );
     }
-
-    if (widget.isTablet) {
-      return Row(
-        children: [
-          Expanded(
-            flex: 5,
-            child: Column(
-              children: [
-                _DashboardMetricCard(
-                  icon: Icons.menu_book,
-                  label: 'Total Menu',
-                  value: totalMenu,
-                ),
-                const SizedBox(height: 12),
-                _DashboardMetricCard(
-                  icon: Icons.shopping_cart_outlined,
-                  label: 'Total Penjualan',
-                  value: totalPenjualanHariIni.toString(),
-                ),
-              ],
-            ),
+    // Use the same horizontal Row layout for both tablet and desktop.
+    // The Expanded widget and ellipsis text will handle smaller tablet widths gracefully.
+    return Row(
+      children: [
+        Expanded(
+          child: _DashboardMetricCard(
+            icon: Icons.menu_book,
+            label: 'Total Menu',
+            value: totalMenu,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 4,
-            child: _RevenueSummaryCard(pendapatan: totalPendapatanHariIni),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _DashboardMetricCard(
+            icon: Icons.shopping_cart_outlined,
+            label: 'Penjualan Hari ini',
+            value: totalPenjualanHariIni.toString(),
           ),
-        ],
-      );
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8EFE5),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE0C9BC)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _DashboardMetricCard(
-              icon: Icons.menu_book,
-              label: 'Total Menu',
-              value: totalMenu,
-            ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: _DashboardMetricCard(
-              icon: Icons.shopping_cart_outlined,
-              label: 'Penjualan (Hari ini)',
-              value: totalPenjualanHariIni.toString(),
-            ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(child: _RevenueSummaryCard(pendapatan: totalPendapatanHariIni)),
-        ],
-      ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _RevenueSummaryCard(pendapatan: totalPendapatanHariIni),
+        ),
+      ],
     );
   }
 }
@@ -801,10 +822,17 @@ class _MiniCalendarCard extends StatelessWidget {
   }
 }
 
-class _ChartCard extends StatelessWidget {
+class _ChartCard extends StatefulWidget {
   const _ChartCard({required this.isMobile});
 
   final bool isMobile;
+
+  @override
+  State<_ChartCard> createState() => _ChartCardState();
+}
+
+class _ChartCardState extends State<_ChartCard> {
+  String _selectedFilter = 'hari';
 
   @override
   Widget build(BuildContext context) {
@@ -826,26 +854,88 @@ class _ChartCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Grafik Pendapatan',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF3A1F1B),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Grafik Pendapatan',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF3A1F1B),
+                ),
+              ),
+              DropdownButton<String>(
+                value: _selectedFilter,
+                icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF8F1A1A)),
+                style: const TextStyle(color: Color(0xFF3A1F1B), fontSize: 13, fontWeight: FontWeight.w600),
+                underline: const SizedBox(),
+                items: const [
+                  DropdownMenuItem(value: 'hari', child: Text('Per Hari')),
+                  DropdownMenuItem(value: 'bulan', child: Text('Per Bulan')),
+                  DropdownMenuItem(value: 'tahun', child: Text('Per Tahun')),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _selectedFilter = value;
+                    });
+                  }
+                },
+              ),
+            ],
           ),
           const SizedBox(height: 18),
-          SizedBox(height: isMobile ? 260 : 300, child: const RevenueChart()),
+          SizedBox(height: widget.isMobile ? 260 : 300, child: RevenueChart(filter: _selectedFilter)),
         ],
       ),
     );
   }
 }
 
-class _NotificationCard extends StatelessWidget {
+class _NotificationCard extends StatefulWidget {
   const _NotificationCard({required this.isMobile});
 
   final bool isMobile;
+
+  @override
+  State<_NotificationCard> createState() => _NotificationCardState();
+}
+
+class _NotificationCardState extends State<_NotificationCard> {
+  List<dynamic> notifications = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchNotif();
+  }
+
+  Future<void> _fetchNotif() async {
+    try {
+      final host = kIsWeb
+          ? '127.0.0.1'
+          : defaultTargetPlatform == TargetPlatform.android
+              ? '10.0.2.2'
+              : '127.0.0.1';
+      final url = Uri.parse('http://$host:8000/api/admin/dashboard/notifications');
+      final response = await http.get(url, headers: {'Accept': 'application/json'}).timeout(const Duration(seconds: 10));
+      
+      if (response.statusCode == 200) {
+        if (mounted) {
+          setState(() {
+            notifications = jsonDecode(response.body);
+            isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -878,25 +968,20 @@ class _NotificationCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          _NotificationEntry(
-            text: 'Pelanggan baru saja mengirimkan masukan...',
-            date: '31/3/2026',
-          ),
-          const SizedBox(height: 10),
-          _NotificationEntry(
-            text: 'Grafik pendapatan meningkat drastis',
-            date: '2/4/2026',
-          ),
-          const SizedBox(height: 10),
-          _NotificationEntry(
-            text: 'Kasir baru saja menambahkan transaksi tunai',
-            date: '5/4/2026',
-          ),
-          const SizedBox(height: 10),
-          _NotificationEntry(
-            text: 'Stok bahan baku kopi hampir habis',
-            date: '7/4/2026',
-          ),
+          if (isLoading)
+            const Center(child: CircularProgressIndicator(color: Color(0xFF8F1A1A)))
+          else if (notifications.isEmpty)
+            const Text('Tidak ada notifikasi pesanan terbaru.', style: TextStyle(color: Color(0xFF8F8A8A)))
+          else
+            ...notifications.map((notif) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _NotificationEntry(
+                  text: notif['text'] ?? '',
+                  date: notif['date'] ?? '',
+                ),
+              );
+            }).toList(),
         ],
       ),
     );
@@ -949,10 +1034,64 @@ class _NotificationEntry extends StatelessWidget {
   }
 }
 
-class _TrendingCard extends StatelessWidget {
+class _TrendingCard extends StatefulWidget {
   const _TrendingCard({required this.isMobile, super.key});
 
   final bool isMobile;
+
+  @override
+  State<_TrendingCard> createState() => _TrendingCardState();
+}
+
+class _TrendingCardState extends State<_TrendingCard> {
+  List<dynamic> trending = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTrending();
+  }
+
+  Future<void> _fetchTrending() async {
+    try {
+      final host = kIsWeb
+          ? '127.0.0.1'
+          : defaultTargetPlatform == TargetPlatform.android
+              ? '10.0.2.2'
+              : '127.0.0.1';
+      final url = Uri.parse('http://$host:8000/api/admin/dashboard/trending');
+      final response = await http.get(url, headers: {'Accept': 'application/json'}).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        if (mounted) {
+          setState(() {
+            trending = jsonDecode(response.body);
+            isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  String _formatPrice(dynamic price) {
+    if (price == null) return 'Rp. 0';
+    final parsed = double.tryParse(price.toString()) ?? 0.0;
+    return 'Rp. ${parsed.toStringAsFixed(0)}';
+  }
+
+  String _getImageUrl(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) return '';
+    final host = kIsWeb
+        ? '127.0.0.1'
+        : defaultTargetPlatform == TargetPlatform.android
+            ? '10.0.2.2'
+            : '127.0.0.1';
+    return 'http://$host:8000/api/image/menu_images/$imagePath';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -981,26 +1120,22 @@ class _TrendingCard extends StatelessWidget {
             style: TextStyle(fontSize: 12, color: Color(0xFF8B8B8B)),
           ),
           const SizedBox(height: 18),
-          const _TrendingItem(
-            title: 'Burger',
-            subtitle: 'Beef Burger',
-            price: 'Rp. 10.000,00',
-            imagePath: 'assets/images/menu1.png',
-          ),
-          const SizedBox(height: 14),
-          const _TrendingItem(
-            title: 'Es Teh',
-            subtitle: 'Iced Tea',
-            price: 'Rp. 5.000,00',
-            imagePath: 'assets/images/menu3.png',
-          ),
-          const SizedBox(height: 14),
-          const _TrendingItem(
-            title: 'Tahu crispy',
-            subtitle: 'Crispy Tofu',
-            price: 'Rp. 15.000,00',
-            imagePath: 'assets/images/menu5.png',
-          ),
+          if (isLoading)
+            const Center(child: CircularProgressIndicator(color: Color(0xFF8F1A1A)))
+          else if (trending.isEmpty)
+            const Text('Belum ada menu yang terjual hari ini.', style: TextStyle(color: Color(0xFF8F8A8A)))
+          else
+            ...trending.map((item) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: _TrendingItem(
+                  title: item['nama_menu'] ?? 'Menu',
+                  subtitle: 'Terjual: ${item['total_terjual'] ?? 0}',
+                  price: _formatPrice(item['harga']),
+                  imagePath: _getImageUrl(item['gambar']),
+                ),
+              );
+            }).toList(),
         ],
       ),
     );
@@ -1046,7 +1181,14 @@ class _TrendingItem extends StatelessWidget {
             ),
             child: Padding(
               padding: const EdgeInsets.all(6),
-              child: Image.asset(imagePath, fit: BoxFit.contain),
+              child: imagePath.isNotEmpty
+                  ? Image.network(
+                      imagePath,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.fastfood, color: Color(0xFF8F1A1A)),
+                    )
+                  : const Icon(Icons.fastfood, color: Color(0xFF8F1A1A)),
             ),
           ),
           const SizedBox(width: 12),

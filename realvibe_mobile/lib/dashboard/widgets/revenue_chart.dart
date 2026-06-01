@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class RevenueChart extends StatefulWidget {
-  const RevenueChart({super.key});
+  const RevenueChart({super.key, this.filter = 'hari'});
+  final String filter;
 
   @override
   State<RevenueChart> createState() => _RevenueChartState();
@@ -21,14 +22,25 @@ class _RevenueChartState extends State<RevenueChart> {
     _fetchChartData();
   }
 
+  @override
+  void didUpdateWidget(RevenueChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.filter != widget.filter) {
+      _fetchChartData();
+    }
+  }
+
   Future<void> _fetchChartData() async {
+    setState(() {
+      _isLoading = true;
+    });
     try {
       final host = kIsWeb
           ? '127.0.0.1'
           : defaultTargetPlatform == TargetPlatform.android
               ? '10.0.2.2'
               : '127.0.0.1';
-      final url = Uri.parse('http://$host:8000/api/admin/dashboard/chart');
+      final url = Uri.parse('http://$host:8000/api/admin/dashboard/chart?filter=${widget.filter}');
       final response = await http.get(url, headers: {
         'Accept': 'application/json',
       }).timeout(const Duration(seconds: 10));
@@ -43,7 +55,12 @@ class _RevenueChartState extends State<RevenueChart> {
           parsedData.add(total);
           
           final dateStr = item['date'].toString();
-          if (dateStr.length >= 10) {
+          if (widget.filter == 'bulan' && dateStr.length >= 7) {
+            // "2026-05" -> "05-26" or "May"
+            parsedLabels.add(dateStr.substring(5, 7)); // Just month number for simplicity
+          } else if (widget.filter == 'tahun') {
+            parsedLabels.add(dateStr);
+          } else if (dateStr.length >= 10) {
             parsedLabels.add(dateStr.substring(5, 10)); // e.g. "05-23"
           } else {
             parsedLabels.add(dateStr);

@@ -84,9 +84,9 @@ class _KeretaPageState extends State<KeretaPage> {
       setState(() {
         _isSaving = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menyimpan gambar: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal menyimpan gambar: $error')));
     }
   }
 
@@ -185,13 +185,7 @@ class _KeretaHeader extends StatelessWidget {
       child: Row(
         children: [
           if (onOpenDrawer != null)
-            IconButton(
-              constraints: const BoxConstraints(),
-              padding: EdgeInsets.zero,
-              onPressed: onOpenDrawer,
-              icon: const Icon(Icons.menu, color: Color(0xFF8E1C1C), size: 20),
-            ),
-          if (isMobile) const SizedBox(width: 10),
+            if (isMobile) const SizedBox(width: 10),
           const Expanded(
             child: Text(
               'Welcome Admin !',
@@ -224,14 +218,8 @@ class _SearchBar extends StatelessWidget {
           ),
           hintText: 'Telusuri disini',
           hintStyle: const TextStyle(color: Color(0xFF8A8A8A)),
-          prefixIcon: const Icon(
-            Icons.menu,
-            color: Color(0xFF8A8A8A),
-          ),
-          suffixIcon: const Icon(
-            Icons.search,
-            color: Color(0xFF8A8A8A),
-          ),
+          prefixIcon: const Icon(Icons.menu, color: Color(0xFF8A8A8A)),
+          suffixIcon: const Icon(Icons.search, color: Color(0xFF8A8A8A)),
           filled: true,
           fillColor: const Color(0xFFF5F1EE),
           border: OutlineInputBorder(
@@ -282,17 +270,12 @@ class _UploadCard extends StatelessWidget {
 
     if (isLoading) {
       content = const Center(
-        child: CircularProgressIndicator(
-          color: Colors.white,
-        ),
+        child: CircularProgressIndicator(color: Colors.white),
       );
     } else if (imageBytes != null) {
       content = ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: Image.memory(
-          imageBytes!,
-          fit: BoxFit.cover,
-        ),
+        child: Image.memory(imageBytes!, fit: BoxFit.cover),
       );
     } else if (serverImageUrl != null) {
       content = ClipRRect(
@@ -306,9 +289,7 @@ class _UploadCard extends StatelessWidget {
           loadingBuilder: (_, child, loadingProgress) {
             if (loadingProgress == null) return child;
             return const Center(
-              child: CircularProgressIndicator(
-                color: Colors.white,
-              ),
+              child: CircularProgressIndicator(color: Colors.white),
             );
           },
         ),

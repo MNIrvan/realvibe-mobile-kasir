@@ -7,11 +7,7 @@ import '../../modal/form_laporan_cetak/form_laporan_cetak.dart';
 enum LaporanFilter { tunai, nonTunai, uangKeluar, keseluruhan }
 
 class LaporanPage extends StatefulWidget {
-  const LaporanPage({
-    super.key,
-    required this.isMobile,
-    this.onOpenDrawer,
-  });
+  const LaporanPage({super.key, required this.isMobile, this.onOpenDrawer});
 
   final bool isMobile;
   final VoidCallback? onOpenDrawer;
@@ -169,10 +165,7 @@ class _LaporanHeader extends StatelessWidget {
             ),
           ),
           if (!isMobile)
-            _HeaderSearch(
-              controller: controller,
-              onChanged: onChanged,
-            ),
+            _HeaderSearch(controller: controller, onChanged: onChanged),
         ],
       ),
     );
@@ -180,10 +173,7 @@ class _LaporanHeader extends StatelessWidget {
 }
 
 class _HeaderSearch extends StatelessWidget {
-  const _HeaderSearch({
-    required this.controller,
-    required this.onChanged,
-  });
+  const _HeaderSearch({required this.controller, required this.onChanged});
 
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
@@ -202,14 +192,7 @@ class _HeaderSearch extends StatelessWidget {
           ),
           hintText: 'Telusuri disini',
           hintStyle: const TextStyle(color: Color(0xFF8A8A8A)),
-          prefixIcon: const Icon(
-            Icons.menu,
-            color: Color(0xFF8A8A8A),
-          ),
-          suffixIcon: const Icon(
-            Icons.search,
-            color: Color(0xFF8A8A8A),
-          ),
+          suffixIcon: const Icon(Icons.search, color: Color(0xFF8A8A8A)),
           filled: true,
           fillColor: const Color(0xFFF5F1EE),
           border: OutlineInputBorder(
@@ -241,10 +224,7 @@ class _FilterTabs extends StatelessWidget {
       return Row(
         children: [
           Expanded(
-            child: _FilterDropdown(
-              selected: selected,
-              onChanged: onSelect,
-            ),
+            child: _FilterDropdown(selected: selected, onChanged: onSelect),
           ),
           const SizedBox(width: 8),
           InkWell(
@@ -311,10 +291,7 @@ class _FilterTabs extends StatelessWidget {
 }
 
 class _FilterDropdown extends StatelessWidget {
-  const _FilterDropdown({
-    required this.selected,
-    required this.onChanged,
-  });
+  const _FilterDropdown({required this.selected, required this.onChanged});
 
   final LaporanFilter selected;
   final ValueChanged<LaporanFilter> onChanged;
@@ -430,10 +407,7 @@ class _FilterTab extends StatelessWidget {
               ),
             )
           else
-            SizedBox(
-              width: 100,
-              child: underline,
-            ),
+            SizedBox(width: 100, child: underline),
         ],
       ),
     );
@@ -464,17 +438,19 @@ class _ReportCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(child: Padding(
-        padding: EdgeInsets.all(24.0),
-        child: CircularProgressIndicator(color: Color(0xFF8F1A1A)),
-      ));
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24.0),
+          child: CircularProgressIndicator(color: Color(0xFF8F1A1A)),
+        ),
+      );
     }
 
     final entries = selected == LaporanFilter.tunai
         ? data.where((e) => e.metode.toLowerCase() == 'tunai').toList()
         : selected == LaporanFilter.nonTunai
-            ? data.where((e) => e.metode.toLowerCase() != 'tunai').toList()
-            : data;
+        ? data.where((e) => e.metode.toLowerCase() != 'tunai').toList()
+        : data;
 
     final query = searchQuery.trim().toLowerCase();
     final filtered = query.isEmpty
@@ -543,24 +519,24 @@ class _ReportToolbar extends StatelessWidget {
     final reportTitle = selected == LaporanFilter.tunai
         ? 'Transaksi Tunai'
         : selected == LaporanFilter.nonTunai
-            ? 'Transaksi Non Tunai'
-            : selected == LaporanFilter.keseluruhan
-                ? 'Transaksi Keseluruhan'
-                : 'Uang Keluar';
+        ? 'Transaksi Non Tunai'
+        : selected == LaporanFilter.keseluruhan
+        ? 'Transaksi Keseluruhan'
+        : 'Uang Keluar';
     final entries = selected == LaporanFilter.tunai
         ? data.where((e) => e.metode.toLowerCase() == 'tunai').toList()
         : selected == LaporanFilter.nonTunai
-            ? data.where((e) => e.metode.toLowerCase() != 'tunai').toList()
-            : selected == LaporanFilter.keseluruhan
-                ? data
-                : const <LaporanModel>[];
+        ? data.where((e) => e.metode.toLowerCase() != 'tunai').toList()
+        : selected == LaporanFilter.keseluruhan
+        ? data
+        : const <LaporanModel>[];
     final title = selected == LaporanFilter.tunai
         ? 'Pembayaran Tunai'
         : selected == LaporanFilter.nonTunai
-            ? 'Pembayaran Non Tunai'
-            : selected == LaporanFilter.keseluruhan
-                ? 'Keseluruhan'
-                : 'Uang Keluar';
+        ? 'Pembayaran Non Tunai'
+        : selected == LaporanFilter.keseluruhan
+        ? 'Keseluruhan'
+        : 'Uang Keluar';
 
     if (isMobile) {
       return Column(
@@ -618,7 +594,8 @@ class _ReportToolbar extends StatelessWidget {
                 onTap: () {
                   showDialog(
                     context: context,
-                    builder: (_) => FormLaporanCetak(title: title, entries: entries),
+                    builder: (_) =>
+                        FormLaporanCetak(title: title, entries: entries),
                   );
                 },
               ),
@@ -852,10 +829,7 @@ class _RowText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        fontSize: 10,
-        color: Color(0xFF5F5752),
-      ),
+      style: const TextStyle(fontSize: 10, color: Color(0xFF5F5752)),
     );
   }
 }

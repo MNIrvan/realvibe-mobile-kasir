@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-
-import 'cashier_models.dart';
-import 'cashier_service.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:http/http.dart' as http;
+import '../auth/login.dart';
 
 class RevenueDashboard extends StatefulWidget {
   const RevenueDashboard({super.key, required this.cashierUser});
@@ -62,12 +63,138 @@ class _RevenueDashboardState extends State<RevenueDashboard> {
     }
   }
 
-  Future<void> _openKasir() async {
-    final openingBalance = _toDouble(_openingBalanceController.text);
-    if (openingBalance < 0) {
-      _showSnack('Saldo awal tidak valid');
-      return;
-    }
+  String _getFormattedDate() {
+    final now = DateTime.now();
+    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    final dayName = days[now.weekday - 1];
+    final monthName = months[now.month - 1];
+    return '$dayName, ${now.day} $monthName ${now.year}';
+  }
+
+  String _getFormattedTime() {
+    final now = DateTime.now();
+    final hour = now.hour.toString().padLeft(2, '0');
+    final minute = now.minute.toString().padLeft(2, '0');
+    final second = now.second.toString().padLeft(2, '0');
+    return '$hour:$minute:$second';
+  }
+
+  // --- TERIMA PESANAN ---
+  void _tampilkanModalPembayaran(Map<String, dynamic> orderDetails) {
+    TextEditingController uangMasukController = TextEditingController();
+    int grandTotal = orderDetails['total'] ?? 0;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            int uangMasuk = int.tryParse(uangMasukController.text.replaceAll('.', '')) ?? 0;
+            int kembalian = uangMasuk - grandTotal;
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Text("Proses Pembayaran", style: TextStyle(fontWeight: FontWeight.bold)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Pesanan: ${orderDetails['nomor_antrian']} - ${orderDetails['name']}"),
+                    const SizedBox(height: 5),
+                    Text("Metode: ${(orderDetails['metode'] ?? 'tunai').toString().toUpperCase()}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    if (orderDetails['catatan'] != null && orderDetails['catatan'].toString().isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text("Catatan: ${orderDetails['catatan']}", style: const TextStyle(fontSize: 12, color: Colors.orange)),
+                    ],
+                    const SizedBox(height: 10),
+                    const Divider(),
+                    // Show items
+                    ...List<Widget>.from((orderDetails['items'] as List).map((item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(child: Text(item['name'], style: const TextStyle(fontSize: 13))),
+                          Text(item['price'], style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                        ],
+                      ),
+                    ))),
+                    const Divider(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("Grand Total", style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text("Rp $grandTotal", style: const TextStyle(fontWeight: FontWeight.bold, color: primaryMaroon, fontSize: 18)),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    const Text("Uang Masuk (Rp)", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    TextField(
+                      controller: uangMasukController,
+                      keyboardType: TextInputType.number,
+                      onChanged: (val) {
+                        setModalState(() {});
+                      },
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.grey[200],
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("Kembalian"),
+                        Text(
+                          kembalian < 0 ? "Uang Kurang!" : "Rp $kembalian",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold, 
+                            color: kembalian < 0 ? Colors.red : Colors.green,
+                            fontSize: 16
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: primaryMaroon, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                  onPressed: kembalian < 0 ? null : () async {
+                    try {
+                      final res = await http.post(Uri.parse('$_apiBase/kasir/pesanan/${orderDetails['id']}/terima'));
+                      if (res.statusCode == 200) {
+                        if (!mounted) return;
+                        setState(() {
+                          incomingOrders.removeWhere((o) => o['id'] == orderDetails['id']);
+                        });
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Pembayaran Berhasil! Pesanan diterima.")));
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+                    }
+                  },
+                  child: const Text("Selesaikan Pembayaran"),
+                ),
+              ],
+            );
+          }
+        );
+      }
+    );
+  }
 
     setState(() => _loading = true);
     try {
@@ -140,11 +267,65 @@ class _RevenueDashboardState extends State<RevenueDashboard> {
 
     if (isSaved != true) return;
 
-    final title = titleController.text.trim();
-    final amount = _toDouble(amountController.text);
-    final notes = notesController.text.trim().isEmpty
-        ? null
-        : notesController.text.trim();
+  PreferredSizeWidget _buildModernAppBar() {
+    return AppBar(
+      elevation: 0,
+      toolbarHeight: 100,
+      backgroundColor: primaryMaroon,
+      flexibleSpace: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Pendapatan', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 5),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white30)),
+                    child: Row(
+                      children: const [
+                        CircleAvatar(radius: 4, backgroundColor: Colors.orangeAccent),
+                        SizedBox(width: 6),
+                        Text('Kasir Aktif', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+              Row(
+                children: [
+                  const Text('Real-Vibe', style: TextStyle(color: Colors.white24, fontSize: 28, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic)),
+                  const SizedBox(width: 20),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.logout_rounded, color: Colors.white),
+                      tooltip: 'Keluar',
+                      onPressed: () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginPage()),
+                          (route) => false,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
     if (title.isEmpty || amount <= 0) {
       _showSnack('Judul dan nominal wajib diisi');
@@ -180,20 +361,35 @@ class _RevenueDashboardState extends State<RevenueDashboard> {
     }
   }
 
-  Future<void> _deleteEntry(CashierSessionEntry entry) async {
-    final session = _activeSession;
-    if (session == null) return;
-
-    setState(() => _loading = true);
-    try {
-      await CashierService.deleteEntry(sessionId: session.id, entryId: entry.id);
-      await _loadActiveSession();
-      _showSnack('Entry dihapus');
-    } catch (e) {
-      _showSnack('Gagal hapus entry: $e');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+  Widget _buildDateHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [primaryMaroon, darkCard]),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [BoxShadow(color: primaryMaroon.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.calendar_month_rounded, color: Colors.white),
+              SizedBox(width: 15),
+              Text('Hari Ini', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(_getFormattedDate(), style: const TextStyle(color: Colors.white70, fontSize: 14)),
+              const SizedBox(height: 2),
+              Text(_getFormattedTime(), style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _closeKasir() async {
