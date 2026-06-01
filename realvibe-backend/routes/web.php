@@ -22,10 +22,20 @@ function getCommonData($page) {
     
     $reservasi_history = Reservasi::whereDate('tanggal', date('Y-m-d'))->get()->toArray();
 
-    // Data Menu Dinamis
+    // Data Menu Dinamis dengan Total Terjual
     $kategori_list = DB::table('kategori_menu')->get();
     $menus = Menu::leftJoin('kategori_menu', 'menu.id_kategori_menu', '=', 'kategori_menu.id')
-                ->select('menu.*', 'kategori_menu.nama_kategori as kategori')
+                ->leftJoin('detail_pesanan', 'menu.id', '=', 'detail_pesanan.menu_id')
+                ->select(
+                    'menu.*', 
+                    'kategori_menu.nama_kategori as kategori',
+                    DB::raw('COALESCE(SUM(detail_pesanan.jumlah), 0) as total_terjual')
+                )
+                ->groupBy(
+                    'menu.id', 'menu.id_kategori_menu', 'menu.nama_menu', 'menu.harga', 
+                    'menu.stok', 'menu.gambar', 'menu.created_at', 'menu.updated_at', 
+                    'kategori_menu.nama_kategori'
+                )
                 ->get();
                 
     $jadwal_gambar = DB::table('kereta')->latest('id')->first();
