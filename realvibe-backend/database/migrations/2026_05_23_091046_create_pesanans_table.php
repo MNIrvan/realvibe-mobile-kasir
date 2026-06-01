@@ -16,12 +16,12 @@ return new class extends Migration
             $table->integer('sesi_id')->nullable();
             $table->integer('meja_id')->nullable();
             $table->string('nomor_antrian')->nullable();
-            $table->string('status')->default('pending');
+            $table->string('status')->nullable();
             $table->string('tipe_pesanan')->nullable();
             $table->timestamp('waktu_pesan')->nullable();
             $table->timestamp('waktu_batas_bayar')->nullable();
             $table->string('alasan_batal')->nullable();
-            $table->text('catatan')->nullable();
+            $table->text('nama_pemesan')->nullable(); 
             $table->timestamps();
         });
     }

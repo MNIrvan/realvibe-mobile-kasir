@@ -5,6 +5,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Http\Controllers\ReservasiController;
 use App\Models\Reservasi;
+use App\Models\Menu;
+use Illuminate\Support\Facades\DB;
 
 function getCommonData($page) {
     // Dummy Data Jadwal Kereta
@@ -20,17 +22,38 @@ function getCommonData($page) {
     
     $reservasi_history = Reservasi::whereDate('tanggal', date('Y-m-d'))->get()->toArray();
 
+    // Data Menu Dinamis dengan Total Terjual
+    $kategori_list = DB::table('kategori_menu')->get();
+    $menus = Menu::leftJoin('kategori_menu', 'menu.id_kategori_menu', '=', 'kategori_menu.id')
+                ->leftJoin('detail_pesanan', 'menu.id', '=', 'detail_pesanan.menu_id')
+                ->select(
+                    'menu.*', 
+                    'kategori_menu.nama_kategori as kategori',
+                    DB::raw('COALESCE(SUM(detail_pesanan.jumlah), 0) as total_terjual')
+                )
+                ->groupBy(
+                    'menu.id', 'menu.id_kategori_menu', 'menu.nama_menu', 'menu.harga', 
+                    'menu.stok', 'menu.gambar', 'menu.created_at', 'menu.updated_at', 
+                    'kategori_menu.nama_kategori'
+                )
+                ->get();
+                
+    $jadwal_gambar = DB::table('kereta')->latest('id')->first();
+
     return [
         'page' => $page,
         'cart' => session()->get('cart', []),
         'jadwal_kereta' => $jadwal_dummy,
         'reservasi_history' => $reservasi_history,
-        'meja_tersedia' => $meja_tersedia > 0 ? $meja_tersedia : 0
+        'meja_tersedia' => $meja_tersedia > 0 ? $meja_tersedia : 0,
+        'kategori_list' => $kategori_list,
+        'menus' => $menus,
+        'jadwal_gambar' => $jadwal_gambar,
     ];
 }
 
 Route::get('/', function () {
-    return view('landing_page', getCommonData('menu'));
+    return view('welcome', getCommonData('menu'));
 });
 
 Route::post('/add-to-cart', function (Request $request) {
@@ -111,10 +134,10 @@ Route::post('/booking-meja', [ReservasiController::class, 'store'])->name('booki
 Route::get('/booking-struk/{id}', [ReservasiController::class, 'struk'])->name('booking.struk');
 
 Route::get('/jadwal', function () {
-    return view('landing_page', getCommonData('jadwal'));
+    return view('welcome', getCommonData('jadwal'));
 });
 
 Route::get('/reservasi', function () {
-    return view('landing_page', getCommonData('reservasi'));
+    return view('welcome', getCommonData('reservasi'));
 });
 

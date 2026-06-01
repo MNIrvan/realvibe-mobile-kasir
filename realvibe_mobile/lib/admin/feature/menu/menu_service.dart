@@ -36,6 +36,27 @@ class MenuService {
     }
   }
 
+  /// Mengambil semua data kategori menu dari server
+  static Future<List<KategoriMenuInfo>> fetchKategoriMenu() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/kategori-menu'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> body = jsonDecode(response.body);
+        if (body['status'] == 'success') {
+          final List<dynamic> data = body['data'];
+          return data.map((json) => KategoriMenuInfo.fromJson(json)).toList();
+        }
+      }
+      throw Exception('Gagal memuat data kategori menu');
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
+
   /// Menambahkan menu baru (dengan atau tanpa gambar)
   static Future<MenuItemInfo> createMenu({
     required String namaMenu,

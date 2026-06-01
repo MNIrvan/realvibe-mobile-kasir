@@ -31,6 +31,7 @@ Route::controller(AuthController::class)->group(function () {
 });
 
 // Menu CRUD Routes
+Route::get('/kategori-menu', [MenuController::class, 'getCategories']);
 Route::apiResource('menu', MenuController::class);
 
 // Kereta Routes

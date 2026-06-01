@@ -3,12 +3,8 @@ import '../../modal/form_tambah_user/tambah_user_form.dart';
 import 'user_model.dart';
 import 'user_service.dart';
 
-class UsersPage extends StatelessWidget {
-  const UsersPage({
-    super.key,
-    required this.isMobile,
-    this.onOpenDrawer,
-  });
+class UsersPage extends StatefulWidget {
+  const UsersPage({super.key, required this.isMobile, this.onOpenDrawer});
 
   final bool isMobile;
   final VoidCallback? onOpenDrawer;
@@ -60,7 +56,7 @@ class _UsersPageState extends State<UsersPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _UsersHeader(isMobile: isMobile, onOpenDrawer: onOpenDrawer),
+          _UsersHeader(isMobile: isMobile, onOpenDrawer: widget.onOpenDrawer),
           const SizedBox(height: 18),
           Row(
             children: [
@@ -83,8 +79,10 @@ class _UsersPageState extends State<UsersPage> {
                 },
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF8F1A1A),
                     borderRadius: BorderRadius.circular(10),
@@ -109,8 +107,14 @@ class _UsersPageState extends State<UsersPage> {
           ),
           const SizedBox(height: 14),
           _isLoading
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF8F1A1A)))
-            : _UsersTable(isMobile: isMobile, users: _usersData, onDelete: _deleteUser),
+              ? const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF8F1A1A)),
+                )
+              : _UsersTable(
+                  isMobile: isMobile,
+                  users: _usersData,
+                  onDelete: _deleteUser,
+                ),
         ],
       ),
     );
@@ -180,14 +184,8 @@ class _HeaderSearch extends StatelessWidget {
           ),
           hintText: 'Telusuri disini',
           hintStyle: const TextStyle(color: Color(0xFF8A8A8A)),
-          prefixIcon: const Icon(
-            Icons.menu,
-            color: Color(0xFF8A8A8A),
-          ),
-          suffixIcon: const Icon(
-            Icons.search,
-            color: Color(0xFF8A8A8A),
-          ),
+          prefixIcon: const Icon(Icons.menu, color: Color(0xFF8A8A8A)),
+          suffixIcon: const Icon(Icons.search, color: Color(0xFF8A8A8A)),
           filled: true,
           fillColor: const Color(0xFFF5F1EE),
           border: OutlineInputBorder(
@@ -201,7 +199,11 @@ class _HeaderSearch extends StatelessWidget {
 }
 
 class _UsersTable extends StatelessWidget {
-  const _UsersTable({required this.isMobile, required this.users, required this.onDelete});
+  const _UsersTable({
+    required this.isMobile,
+    required this.users,
+    required this.onDelete,
+  });
 
   final bool isMobile;
   final List<UserModel> users;
@@ -240,8 +242,10 @@ class _UsersTable extends StatelessWidget {
           ...users
               .map(
                 (u) => Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 10,
+                  ),
                   decoration: const BoxDecoration(
                     border: Border(
                       bottom: BorderSide(color: Color(0xFFE7DDD6)),
@@ -273,10 +277,16 @@ class _UsersTable extends StatelessWidget {
                       Expanded(child: _RowText(u.username)),
                       Expanded(child: _RowText('••••••')),
                       Expanded(child: _RowText(u.role)),
-                      Expanded(child: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red, size: 16),
-                        onPressed: () => onDelete(u.id),
-                      )),
+                      Expanded(
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.delete,
+                            color: Colors.red,
+                            size: 16,
+                          ),
+                          onPressed: () => onDelete(u.id),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -315,11 +325,7 @@ class _RowText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        fontSize: 10,
-        color: Color(0xFF5F5752),
-      ),
+      style: const TextStyle(fontSize: 10, color: Color(0xFF5F5752)),
     );
   }
 }
-

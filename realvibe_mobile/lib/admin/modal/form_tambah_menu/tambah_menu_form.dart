@@ -27,27 +27,51 @@ class MenuForm extends StatefulWidget {
 class _MenuFormState extends State<MenuForm> {
   late TextEditingController _namaController;
   late TextEditingController _hargaController;
-  late TextEditingController _kategoriController;
+  int? _selectedKategoriId;
   late String _stok;
   Uint8List? _pickedImageBytes;
   String? _pickedImageName;
   bool _isSaving = false;
   final ImagePicker _picker = ImagePicker();
 
+  List<KategoriMenuInfo> _kategoriList = [];
+  bool _isLoadingKategori = true;
+
   @override
   void initState() {
     super.initState();
     _namaController = TextEditingController(text: widget.menuItem?.namaMenu ?? '');
     _hargaController = TextEditingController(text: widget.menuItem?.harga.toStringAsFixed(0) ?? '');
-    _kategoriController = TextEditingController(text: widget.menuItem?.idKategoriMenu.toString() ?? '');
+    _selectedKategoriId = widget.menuItem?.idKategoriMenu;
     _stok = widget.menuItem?.stok ?? 'tersedia';
+    _fetchKategori();
+  }
+
+  Future<void> _fetchKategori() async {
+    try {
+      final list = await MenuService.fetchKategoriMenu();
+      if (mounted) {
+        setState(() {
+          _kategoriList = list;
+          _isLoadingKategori = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingKategori = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memuat kategori: $e')),
+        );
+      }
+    }
   }
 
   @override
   void dispose() {
     _namaController.dispose();
     _hargaController.dispose();
-    _kategoriController.dispose();
     super.dispose();
   }
 
@@ -67,7 +91,7 @@ class _MenuFormState extends State<MenuForm> {
   Future<void> _saveMenu() async {
     final namaMenu = _namaController.text.trim();
     final harga = double.tryParse(_hargaController.text.trim()) ?? -1;
-    final idKategori = int.tryParse(_kategoriController.text.trim()) ?? -1;
+    final idKategori = _selectedKategoriId ?? -1;
 
     if (namaMenu.isEmpty || idKategori <= 0 || harga < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -245,8 +269,42 @@ class _MenuFormState extends State<MenuForm> {
             _FieldLabel(text: 'Nama Menu'),
             _InputField(controller: _namaController, hintText: 'Masukkan nama menu'),
             const SizedBox(height: 12),
-            _FieldLabel(text: 'ID Kategori'),
-            _InputField(controller: _kategoriController, hintText: '1', keyboardType: TextInputType.number),
+            _FieldLabel(text: 'Kategori'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: _isLoadingKategori
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        child: SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF8F1A1A)),
+                        ),
+                      )
+                    : DropdownButtonHideUnderline(
+                        child: DropdownButton<int>(
+                          value: _kategoriList.any((k) => k.id == _selectedKategoriId) ? _selectedKategoriId : null,
+                          isExpanded: true,
+                          hint: const Text('Pilih Kategori', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                          items: _kategoriList.map((KategoriMenuInfo kategori) {
+                            return DropdownMenuItem<int>(
+                              value: kategori.id,
+                              child: Text(kategori.namaKategori, style: const TextStyle(fontSize: 13)),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) setState(() => _selectedKategoriId = val);
+                          },
+                        ),
+                      ),
+              ),
+            ),
             const SizedBox(height: 12),
             _FieldLabel(text: 'Harga (Rp)'),
             _InputField(controller: _hargaController, hintText: '15000', keyboardType: TextInputType.number),

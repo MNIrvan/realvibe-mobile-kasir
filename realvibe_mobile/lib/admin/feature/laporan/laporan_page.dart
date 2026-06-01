@@ -25,6 +25,28 @@ class _LaporanPageState extends State<LaporanPage> {
   final TextEditingController _searchController = TextEditingController();
   DateTime? _selectedDate;
 
+  final LaporanService _service = LaporanService();
+  List<LaporanModel> _data = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    try {
+      final data = await _service.getLaporan();
+      setState(() {
+        _data = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
   String? get _selectedDateText {
     if (_selectedDate == null) return null;
     final d = _selectedDate!;
@@ -89,6 +111,8 @@ class _LaporanPageState extends State<LaporanPage> {
             selectedDateText: _selectedDateText,
             onPickDate: _pickDate,
             onResetDateFilter: () => setState(() => _selectedDate = null),
+            data: _data,
+            isLoading: _isLoading,
           ),
         ],
       ),
@@ -424,6 +448,8 @@ class _ReportCard extends StatelessWidget {
     required this.selectedDateText,
     required this.onPickDate,
     required this.onResetDateFilter,
+    required this.data,
+    required this.isLoading,
   });
 
   final bool isMobile;
@@ -432,6 +458,8 @@ class _ReportCard extends StatelessWidget {
   final String? selectedDateText;
   final VoidCallback onPickDate;
   final VoidCallback onResetDateFilter;
+  final List<LaporanModel> data;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -480,6 +508,7 @@ class _ReportCard extends StatelessWidget {
             onPickDate: onPickDate,
             onResetDateFilter: onResetDateFilter,
             isMobile: isMobile,
+            data: data,
           ),
           const SizedBox(height: 12),
           if (selected == LaporanFilter.uangKeluar)
@@ -499,6 +528,7 @@ class _ReportToolbar extends StatelessWidget {
     required this.onPickDate,
     required this.onResetDateFilter,
     required this.isMobile,
+    required this.data,
   });
 
   final LaporanFilter selected;
@@ -506,6 +536,7 @@ class _ReportToolbar extends StatelessWidget {
   final VoidCallback onPickDate;
   final VoidCallback onResetDateFilter;
   final bool isMobile;
+  final List<LaporanModel> data;
 
   @override
   Widget build(BuildContext context) {
@@ -517,12 +548,12 @@ class _ReportToolbar extends StatelessWidget {
                 ? 'Transaksi Keseluruhan'
                 : 'Uang Keluar';
     final entries = selected == LaporanFilter.tunai
-        ? laporanTunai
+        ? data.where((e) => e.metode.toLowerCase() == 'tunai').toList()
         : selected == LaporanFilter.nonTunai
-            ? laporanNonTunai
+            ? data.where((e) => e.metode.toLowerCase() != 'tunai').toList()
             : selected == LaporanFilter.keseluruhan
-                ? laporanKeseluruhan()
-                : const <LaporanEntry>[];
+                ? data
+                : const <LaporanModel>[];
     final title = selected == LaporanFilter.tunai
         ? 'Pembayaran Tunai'
         : selected == LaporanFilter.nonTunai

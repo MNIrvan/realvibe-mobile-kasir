@@ -499,14 +499,13 @@ class _RevenueSummaryCard extends StatelessWidget {
   }
 }
 
-class _DashboardSummaryPanel extends StatelessWidget {
+class _DashboardSummaryPanel extends StatefulWidget {
   const _DashboardSummaryPanel({
+    super.key,
     required this.isMobile,
     required this.isTablet,
   });
-
-class _DashboardSummaryPanel extends StatefulWidget {
-  const _DashboardSummaryPanel({required this.isMobile});
+  
   final bool isMobile;
   final bool isTablet;
 
@@ -560,38 +559,6 @@ class _DashboardSummaryPanelState extends State<_DashboardSummaryPanel> {
 
   @override
   Widget build(BuildContext context) {
-    if (isMobile) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: const [
-          Expanded(
-            flex: 5,
-            child: Column(
-              children: [
-                _DashboardMetricCard(
-                  icon: Icons.menu_book,
-                  label: 'Total Menu',
-                  value: '25',
-                ),
-                SizedBox(height: 12),
-                _DashboardMetricCard(
-                  icon: Icons.shopping_cart_outlined,
-                  label: 'Total Penjualan',
-                  value: '450',
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            flex: 4,
-            child: _RevenueSummaryCard(),
-          ),
-        ],
-      );
-    }
-
-    if (isTablet) {
     if (widget.isMobile) {
       return Column(
         children: [
@@ -608,6 +575,36 @@ class _DashboardSummaryPanelState extends State<_DashboardSummaryPanel> {
           ),
           const SizedBox(height: 12),
           _RevenueSummaryCard(pendapatan: totalPendapatanHariIni),
+        ],
+      );
+    }
+
+    if (widget.isTablet) {
+      return Row(
+        children: [
+          Expanded(
+            flex: 5,
+            child: Column(
+              children: [
+                _DashboardMetricCard(
+                  icon: Icons.menu_book,
+                  label: 'Total Menu',
+                  value: totalMenu,
+                ),
+                const SizedBox(height: 12),
+                _DashboardMetricCard(
+                  icon: Icons.shopping_cart_outlined,
+                  label: 'Total Penjualan',
+                  value: totalPenjualanHariIni.toString(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 4,
+            child: _RevenueSummaryCard(pendapatan: totalPendapatanHariIni),
+          ),
         ],
       );
     }

@@ -1,105 +1,6 @@
 @php
-    // HAPUS session_start() karena Laravel mengelolanya secara otomatis
-    // Logika PHP dipindahkan ke sintaks Blade agar lebih bersih
-
-    $page = request('page', 'menu');
-    $kategori_aktif = request('kategori', 'snack');
-    $search_query = strtolower(request('search', ''));
-
-    $semua_menu = [
-        "snack" => [
-            ["nama" => "Burger ayam", "sub" => "FriedOnions ", "harga" => "12.000", "img" => "/images/Burger_ayam .jpg", "desc" => "Burger ayam krispi dengan topping bawang bombay goreng renyah dan saus spesial."],
-            ["nama" => "Burger sapi", "sub" => "Crispy Tofu", "harga" => "15.000", "img" => "/images/Burger_sapi.jpg", "desc" => "Daging sapi juicy dengan keju lumer dan roti lembut yang dipanggang sempurna."],
-            ["nama" => "Brokoli crispy", "sub" => "French Fries", "harga" => "10.000", "img" => "/images/Brokoli_crispy.png", "desc" => "Brokoli segar yang dibalut tepung bumbu premium dan digoreng hingga sangat renyah."],
-            ["nama" => "Cilok", "sub" => "Fried Tapioca", "harga" => "10.000", "img" => "/images/Cilok.jpg", "desc" => "Bola tapioka kenyal dengan bumbu kacang gurih khas resep tradisional."],
-            ["nama" => "Cireng", "sub" => "Sweet Banana Roll", "harga" => "10.000", "img" => "/images/cireng.jpg", "desc" => "Aci digoreng garing di luar dan kenyal di dalam, disajikan hangat."],
-            ["nama" => "Jamur krispy", "sub" => "Chicken Dimsum", "harga" => "10.000", "img" => "/images/jamur_krispy .jpg", "desc" => "Jamur tiram pilihan yang digoreng dengan tepung bumbu rahasia."],
-            ["nama" => "Kentang goreng", "sub" => "Chicken Dimsum", "harga" => "12.000", "img" => "/images/Kentang_Goreng.jpg", "desc" => "Kentang pilihan yang dipotong dan digoreng hingga keemasan, menghasilkan tekstur renyah."],
-            ["nama" => "Naget goreng", "sub" => "Chicken Dimsum", "harga" => "15.000", "img" => "/images/naget_goreng.jpg", "desc" => "Nugget ayam goreng hangat yang krispi dan gurih."],
-            ["nama" => "Onion Rings", "sub" => "Sweet Banana Roll", "harga" => "10.000", "img" => "/images/onion_rings.jpg", "desc" => "Bawang bombay potong cincin yang dibalut tepung roti renyah."],
-            ["nama" => "Pisang Goreng", "sub" => "Sweet Banana Roll", "harga" => "10.000", "img" => "/images/Pisang_Goreng.jpg", "desc" => "Pisang manis goreng hangat, teman santai yang paling pas."],
-            ["nama" => "Roti Maryam", "sub" => "Sweet Banana Roll", "harga" => "10.000", "img" => "/images/roti_canai.jpg", "desc" => "Roti pipih gurih yang nikmat disantap dengan berbagai topping."],
-            ["nama" => "Roti Bakar", "sub" => "Roti Bakar", "harga" => "10.000", "img" => "/images/RotiBakar.png", "desc" => "Roti pipih gurih yang nikmat disantap dengan berbagai topping."],
-            ["nama" => "Tahu Cryspy", "sub" => "Sweet Banana Roll", "harga" => "10.000", "img" => "/images/Tahu_Cryspy.jpg", "desc" => "Tahu goreng dengan kremesan tepung yang sangat krispi."],
-            ["nama" => "Sosil Bakar", "sub" => "Sosil Bakaar", "harga" => "13.000", "img" => "/images/SosisBakar.png", "desc" => "Tahu goreng dengan kremesan tepung yang sangat krispi."],
-            ["nama" => "Tempe mendoan", "sub" => "Sweet Banana Roll", "harga" => "10.000", "img" => "/images/TEMPE_MENDOAN.jpg", "desc" => "Tempe goreng tepung setengah matang yang lembut dan kaya rasa."],
-            ["nama" => "Nugget", "sub" => "Nugget", "harga" => "12.000", "img" => "/images/Nugget.png", "desc" => "Tempe goreng tepung setengah matang yang lembut dan kaya rasa."],
-        ],
-        "makanan" => [
-            ["nama" => "Nasi Goreng Reguler", "sub" => "Fried Noodles", "harga" => "13.000", "img" => "resources/image/mie.jpg", "desc" => "Mie goreng spesial dengan bumbu rempah autentik."],
-            ["nama" => "Nasi Goreng Spesial", "sub" => "Special Fried Rice", "harga" => "18.000", "img" => "/images/Nasigoreng.png", "desc" => "Nasi goreng spesial dengan telur dan racikan bumbu khas cafe."],
-            ["nama" => "Nasi Goreng Ikan Asin", "sub" => "Grilled Chicken", "harga" => "19.000", "img" => "resources/image/ayambakar.jpg", "desc" => "Ayam bakar bumbu kecap meresap yang dibakar sempurna."],
-            ["nama" => "Nasi Goreng Seafood", "sub" => "Chicken Soup", "harga" => "20.000", "img" => "resources/image/soto.jpg", "desc" => "Kuah soto kuning yang segar dengan suwiran ayam melimpah."],
-            ["nama" => "Lalapan Ayam Laos", "sub" => "Meatball Soup", "harga" => "19.000", "img" => "resources/image/bakso.jpg", "desc" => "Bakso urat sapi asli dengan kuah kaldu yang gurih dan hangat."],
-            ["nama" => "Lalapan Ayam Kampung", "sub" => "Chicken Noodle", "harga" => "35.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Lalapan Bebek Sinjay", "sub" => "Chicken Noodle", "harga" => "35.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Lalapan Ayam Kremes", "sub" => "Chicken Noodle", "harga" => "19.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Lalapan T3", "sub" => "Chicken Noodle", "harga" => "15.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Ayam Geprek", "sub" => "Chicken Noodle", "harga" => "15.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Chicken Mozarella", "sub" => "Chicken Noodle", "harga" => "25.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Telur Geprek", "sub" => "Chicken Noodle", "harga" => "15.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Fuyunghai", "sub" => "Chicken Noodle", "harga" => "20.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Capcay", "sub" => "Chicken Noodle", "harga" => "22.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Mie Goreng", "sub" => "Chicken Noodle", "harga" => "15.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Mie Kuah", "sub" => "Chicken Noodle", "harga" => "15.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Cah Kangkung", "sub" => "Chicken Noodle", "harga" => "15.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Cah Tauge", "sub" => "Chicken Noodle", "harga" => "15.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Sup Iga", "sub" => "Chicken Noodle", "harga" => "40.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Sup Buntut", "sub" => "Chicken Noodle", "harga" => "40.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Bistik Ayam", "sub" => "Chicken Noodle", "harga" => "25.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Rawon", "sub" => "Chicken Noodle", "harga" => "25.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-            ["nama" => "Pecel   ", "sub" => "Chicken Noodle", "harga" => "15.000", "img" => "resources/image/mieayam.jpg", "desc" => "Mie kenyal dengan topping ayam bumbu kecap yang manis gurih."],
-        ],
-        "minuman" => [
-            ["nama" => "Lemon Tea (Panas/Dingin)", "sub" => "Lemon Tea", "harga" => "8.000", "img" => "/images/ESteh.png", "desc" => "Teh seduh segar yang disajikan dingin dengan es batu."],
-            ["nama" => "Jeruk Manis (Panas/Dingin)", "sub" => "Milk Coffee", "harga" => "10.000", "img" => "/images/Kopisusu.png", "desc" => "Perpaduan kopi robusta dan susu kental manis yang mantap."],
-            ["nama" => "Jeruk Nipis (Panas/Dingin)", "sub" => "Avocado Juice", "harga" => "12.000", "img" => "/images/alpukat.jpg", "desc" => "Jus alpukat kental dengan siraman cokelat yang nikmat."],
-            ["nama" => "Cappucino (Panas/Dingin)", "sub" => "Chocolate Milkshake", "harga" => "15.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Milo (Panas/Dingin)", "sub" => "Chocolate Milkshake", "harga" => "15.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Susu Uht (Panas/Dingin)", "sub" => "Chocolate Milkshake", "harga" => "15.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Lemon Jahe", "sub" => "Orange Juice", "harga" => "7.000", "img" => "/images/ESjeruk.png", "desc" => "Perasan jeruk asli yang menyegarkan dahaga."],
-            ["nama" => "Jahe", "sub" => "Coconut Ice", "harga" => "10.000", "img" => "/images/kelapa.jpg", "desc" => "Air kelapa muda murni untuk kesegaran maksimal."],
-            ["nama" => "Teh Manis ", "sub" => "Chocolate Milkshake", "harga" => "5.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Teh Susu ", "sub" => "Chocolate Milkshake", "harga" => "15.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Susu Jahe ", "sub" => "Chocolate Milkshake", "harga" => "15.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Coklat ", "sub" => "Chocolate Milkshake", "harga" => "15.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Susu Coklat Panas  ", "sub" => "Chocolate Milkshake", "harga" => "15.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Es Susu Coklat", "sub" => "Chocolate Milkshake", "harga" => "15.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Es Joshua ", "sub" => "Chocolate Milkshake", "harga" => "8.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Es Susu Soda", "sub" => "Chocolate Milkshake", "harga" => "15.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Es Teh Susu", "sub" => "Chocolate Milkshake", "harga" => "10.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Es Teh Manis/Tawar", "sub" => "Chocolate Milkshake", "harga" => "6.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Es Dalgona", "sub" => "Chocolate Milkshake", "harga" => "12.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Es Matcha", "sub" => "Chocolate Milkshake", "harga" => "10.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Air Mineral", "sub" => "Chocolate Milkshake", "harga" => "5.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-            ["nama" => "Es Batu", "sub" => "Chocolate Milkshake", "harga" => "2.000", "img" => "/images/milkshake.jpg", "desc" => "Susu kocok cokelat dengan tekstur yang creamy dan manis."],
-        ],
-        "dessert" => [
-            ["nama" => "Roti Bakar", "sub" => "Toast", "harga" => "8.000", "img" => "/images/RBakar.png", "desc" => "Roti panggang hangat dengan berbagai pilihan selai manis."],
-            ["nama" => "Salad Buah", "sub" => "Fruit Salad", "harga" => "15.000", "img" => "/images/salad.jpg", "desc" => "Buah segar dengan saus mayo manis dan keju melimpah."],
-            ["nama" => "Ice Cream Scoop", "sub" => "Vanilla / Choco", "harga" => "10.000", "img" => "/images/icecream.jpg", "desc" => "Es krim lembut dengan pilihan rasa cokelat atau vanilla."],
-            ["nama" => "Roti Bakar Keju", "sub" => "Cheese Toast", "harga" => "12.000", "img" => "/images/rotibakar.jpg", "desc" => "Roti bakar spesial dengan taburan keju parut melimpah."],
-            ["nama" => "Mochi Es Krim", "sub" => "Ice Cream Mochi", "harga" => "12.000", "img" => "/images/mochi.jpg", "desc" => "Mochi kenyal isi es krim dingin berbagai rasa."],
-            ["nama" => "Waffle Honey", "sub" => "Sweet Waffle", "harga" => "18.000", "img" => "/images/waffle.jpg", "desc" => "Waffle renyah yang disajikan dengan madu murni."],
-        ]
-    ];
-
-    $menu_tampil = $semua_menu[$kategori_aktif] ?? [];
-
-    if (!empty($search_query)) {
-        $menu_tampil = [];
-        foreach ($semua_menu as $cat => $items) {
-            foreach ($items as $item) {
-                if (strpos(strtolower($item['nama']), $search_query) !== false) {
-                    $menu_tampil[] = $item;
-                }
-            }
-        }
-    }
-
-    // Ambil cart dari session Laravel
-    $cart = session('cart', []);
-    @endphp
+$page = request('page', 'menu');
+@endphp
 
     <!DOCTYPE html>
     <html lang="id">
@@ -113,6 +14,7 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
             :root { 
@@ -346,7 +248,11 @@
             .nav-item.active { color: var(--primary-red); font-weight: bold; }
             
             .modal-header-custom { background-color: var(--dark-red); color: white; border-radius: 0 0 30px 30px; padding: 30px 20px; border: none; }
-            .cart-item-card { border-radius: 20px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 12px; padding: 10px; background: white; }
+            .cart-item-card { border-radius: 20px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 12px; padding: 12px; background: white; }
+            .cart-item-card img { border-radius: 50%; object-fit: cover; width: 60px; height: 60px; }
+            .cart-header-curve { background-color: #962519; height: 180px; border-bottom-left-radius: 50%; border-bottom-right-radius: 50%; display: flex; align-items: center; padding: 0 30px; position: relative; color: white; margin-bottom: 20px; }
+            .qty-control { display: flex; align-items: center; gap: 10px; background: #F8F9FA; padding: 5px 12px; border-radius: 20px; }
+            .btn-qty { background: transparent; border: none; font-weight: bold; font-size: 1.1rem; color: #962519; padding: 0; min-width: 20px; text-align: center; }
             .qty-control { background: #f1f1f1; border-radius: 50px; padding: 2px 8px; display: flex; align-items: center; }
             .btn-qty { border: none; background: none; color: var(--primary-red); font-weight: bold; }
             
@@ -459,15 +365,13 @@
             </div>
         </div>
 
-        <a href="https://wa.me/6282144851960" target="_blank" class="wa-float-btn"><i class="fab fa-whatsapp"></i></a>
+        <!-- <a href="https://wa.me/6282144851960" target="_blank" class="wa-float-btn"><i class="fab fa-whatsapp"></i></a> -->
 
         <div class="header-custom d-flex justify-content-between align-items-center">
             <div><i class="fas fa-user-circle fa-2x"></i> <span class="ms-2 fw-bold">Welcome, Customer</span></div>
-            <div class="position-relative" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#cartModal">
+            <div class="position-relative" style="cursor: pointer;" onclick="openCartModal()">
                 <i class="fas fa-shopping-cart fa-lg"></i>
-                <span id="cart-badge" class="badge rounded-pill bg-warning text-dark position-absolute top-0 start-100 translate-middle">
-                    {{ array_sum(array_column(session('cart', []), 'qty')) }}
-                </span>
+                <span id="cart-badge" class="badge rounded-pill bg-warning text-dark position-absolute top-0 start-100 translate-middle">0</span>
             </div>
         </div>
 
@@ -475,18 +379,15 @@
             @if($page == 'menu')
                 <div class="sticky-search-container">
                     <div class="sticky-search-inner">
-                        <form id="searchForm" action="" method="GET" class="m-0">
-                            <input type="hidden" name="page" value="menu">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-0 ps-3"><i class="fas fa-bars"></i></span>
-                                <input type="text" name="search" class="form-control border-0 py-2" placeholder="Cari menu..." value="{{ $search_query }}" onkeyup="this.form.submit()">
-                                <button type="submit" class="btn bg-white border-0 pe-3"><i class="fas fa-search text-muted"></i></button>
-                            </div>
-                        </form>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-0 ps-3"><i class="fas fa-bars"></i></span>
+                            <input type="text" id="searchInput" class="form-control border-0 py-2" placeholder="Cari menu...">
+                            <button class="btn bg-white border-0 pe-3"><i class="fas fa-search text-muted"></i></button>
+                        </div>
                     </div>
                 </div>
 
-                @if(empty($search_query))
+                <div id="promoCarouselSection">
                 <div id="promoCarousel" class="carousel slide promo-slider" data-bs-ride="carousel" data-bs-interval="3000">
                     <div class="carousel-indicators">
                         <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="0" class="active"></button>
@@ -499,49 +400,26 @@
                         <div class="carousel-item"><img src="{{ asset('/images/banner_realvibe (1).png') }}" alt="Banner 3"></div>
                     </div>
                 </div>
-                @endif
+                </div>
 
                 <div class="px-2 mb-4">
                     <h3 class="fw-bold mb-3">Kategori</h3>
-                    <div class="d-flex gap-3 overflow-auto pb-2" style="scrollbar-width: none; -ms-overflow-style: none;">
-                        @php
-                        $icon_kategori = [
-                            'snack'   => asset('images/icons/nachos-color.svg'),
-                            'makanan' => asset('images/icons/rice-bowl-color.svg'),
-                            'minuman' => asset('images/icons/boba-drink-color.svg'),
-                            'dessert' => asset('images/icons/cake-slice-color.svg'),
-                        ];
-                        @endphp
-                        @foreach(['snack', 'makanan', 'minuman', 'dessert'] as $cat)
-                        <a href="?page=menu&kategori={{ $cat }}" class="text-decoration-none">
-                            <div class="category-card d-flex flex-column align-items-center {{ ($kategori_aktif == $cat && empty($search_query)) ? 'active' : '' }}">
-                                <div class="category-icon-wrapper mb-2"><img src="{{ $icon_kategori[$cat] }}" alt="{{ $cat }}" class="waaaw-icon"></div>
-                                <span class="category-name">{{ ucfirst($cat) }}</span>
-                            </div>
-                        </a>
-                        @endforeach
+                    <div id="kategoriContainer" class="d-flex gap-3 overflow-auto pb-2" style="scrollbar-width: none; -ms-overflow-style: none;"></div>
+                </div>
+
+                <div id="menuTeratasSection" class="px-2 mb-4" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-bold m-0" style="font-size: 1.15rem; color: #2D1A1A;">Menu teratas</h4>
+                        <span class="badge text-danger fw-normal px-3 py-2" style="background-color: #F9EBEB; border-radius: 12px; cursor: pointer; font-size: 0.75rem;" onclick="setKategori('all')">Lihat semua ></span>
+                    </div>
+                    <div id="menuTeratasContainer" class="d-flex gap-3 overflow-auto pb-3" style="scrollbar-width: none; -ms-overflow-style: none; padding-right: 10px;">
+                        <!-- JS injected -->
                     </div>
                 </div>
 
                 <div class="px-2">
-                    <h6 class="fw-bold mb-3">{{ !empty($search_query) ? "Hasil pencarian: '$search_query'" : "Menu ".ucfirst($kategori_aktif) }}</h6>
-                    <div class="row g-3">
-                        @forelse($menu_tampil as $m)
-                        <div class="col-6">
-                            <div class="card menu-card" onclick="openDetail('{{ $m['nama'] }}', '{{ $m['harga'] }}', '{{ asset($m['img']) }}', '{{ $m['desc'] }}', '{{ $m['sub'] }}')">
-                                <img src="{{ asset($m['img']) }}" class="mx-auto mt-2" onerror="this.src='https://via.placeholder.com/150'">
-                                <div class="card-body p-2 mt-2">
-                                    <div class="fw-bold small">{{ $m['nama'] }}</div>
-                                    <div class="text-muted mb-2" style="font-size: 0.6rem;">{{ $m['sub'] }}</div>
-                                    <div class="text-danger fw-bold mb-2">Rp {{ $m['harga'] }}</div>
-                                    <button class="btn btn-tambah py-1 btn-beli" onclick="event.stopPropagation();" data-nama="{{ $m['nama'] }}" data-harga="{{ $m['harga'] }}">+ Tambah</button>
-                                </div>
-                            </div>
-                        </div>
-                        @empty
-                        <div class="col-12 text-center text-muted py-5">Menu tidak ditemukan :(</div>
-                        @endforelse
-                    </div>
+                    <h6 id="menuTitle" class="fw-bold mb-3"></h6>
+                    <div id="menuGrid" class="row g-3"></div>
                 </div>
 
             @elseif($page == 'jadwal')
@@ -555,8 +433,26 @@
                 </div>
                 <div style="margin-top: -100px; padding: 0 25px; text-align: center; position: relative; z-index: 5;">
                     <div style="background: white; padding: 10px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: inline-block; width: 100%; position: relative;">
-                        <img src="{{ asset('/images/jadwal_kereta.png') }}" style="width: 100%; border-radius: 10px;" alt="Jadwal Kereta" onerror="this.src='https://via.placeholder.com/600x800?text=Gambar+Jadwal+Kereta'">
+                        @if(isset($jadwal_gambar) && $jadwal_gambar)
+                            <img src="{{ url('api/image/' . $jadwal_gambar->gambar) }}" style="width: 100%; border-radius: 10px; cursor: pointer;" alt="Jadwal Kereta" onerror="this.src='{{ asset('/images/jadwal_kereta.png') }}'" data-bs-toggle="modal" data-bs-target="#zoomJadwalModal">
+                        @else
+                            <img src="{{ asset('/images/jadwal_kereta.png') }}" style="width: 100%; border-radius: 10px;" alt="Jadwal Kereta">
+                        @endif
                         <div class="maskot-jadwal-wrapper"><img src="{{ asset('/images/maskot_realvibe.png') }}" class="maskot-jadwal-img" alt="Maskot"></div>
+                    </div>
+                </div>
+
+                <!-- Modal Zoom Jadwal -->
+                <div class="modal fade" id="zoomJadwalModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content bg-transparent border-0">
+                            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3" data-bs-dismiss="modal" style="filter: invert(1);"></button>
+                            <div class="modal-body text-center p-0">
+                                @if(isset($jadwal_gambar) && $jadwal_gambar)
+                                    <img src="{{ url('api/image/' . $jadwal_gambar->gambar) }}" style="width: 100%; border-radius: 15px;" alt="Jadwal Zoom">
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -567,55 +463,64 @@
                         <div class="col-6"><div class="card card-custom p-3 text-center"><i class="fas fa-chair text-danger mb-2"></i><h4 class="fw-bold mb-0">12</h4><small class="text-muted" style="font-size: 0.7rem;">Meja Tersedia</small></div></div>
                         <div class="col-6"><div class="card card-custom p-3 text-center"><i class="fas fa-users text-primary mb-2"></i><h4 class="fw-bold mb-0">5</h4><small class="text-muted" style="font-size: 0.7rem;">Booking Hari Ini</small></div></div>
                     </div>
-                    <div class="mt-4"><button class="btn btn-danger w-100 py-3 fw-bold shadow-sm" style="border-radius: 15px;">BUAT RESERVASI MEJA</button></div>
+                    <div class="mt-4"><button class="btn w-100 py-3 fw-bold text-white text-uppercase" style="border-radius: 15px; background: #C42F1A;" data-bs-toggle="modal" data-bs-target="#reservasiModal">BUAT RESERVASI MEJA</button></div>
                 </div>
             @endif
         </div>
 
+        <!-- Modal Reservasi -->
+        <div class="modal fade" id="reservasiModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0" style="border-radius: 25px; background: #FAFAFA;">
+                    <div class="modal-header border-0 pb-0 mt-2 ms-2">
+                        <h5 class="fw-bold m-0" style="color: #2D1A1A;">Form Reservasi Meja</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <form action="{{ route('booking.meja') }}" method="POST">
+                            @csrf
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">Nama Lengkap</label>
+                                <input type="text" name="nama" class="form-control" style="border-radius: 12px; padding: 12px;" placeholder="Masukkan nama Anda" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">Tanggal Kedatangan</label>
+                                <input type="date" name="tanggal" class="form-control" style="border-radius: 12px; padding: 12px;" required min="{{ date('Y-m-d') }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">Waktu Kedatangan</label>
+                                <input type="time" name="waktu" class="form-control" style="border-radius: 12px; padding: 12px;" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted">Jumlah Tamu</label>
+                                <input type="number" name="jumlah_orang" class="form-control" style="border-radius: 12px; padding: 12px;" min="1" max="10" placeholder="Contoh: 2" required>
+                                <div class="form-text small mt-1">Maksimal 10 orang per reservasi.</div>
+                            </div>
+                            
+                            <button type="submit" class="btn w-100 py-3 fw-bold text-white text-uppercase" style="border-radius: 15px; background: #C42F1A;">
+                                <i class="fas fa-check-circle me-2"></i> Konfirmasi & Lanjut WA
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="modal fade" id="cartModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-fullscreen-sm-down">
-                <div class="modal-content" style="background-color: #f8f9fa;">
-                    <div class="modal-header modal-header-custom">
-                        <button type="button" class="btn text-white p-0" data-bs-dismiss="modal"><i class="fas fa-arrow-left fa-lg"></i></button>
-                        <h5 class="modal-title fw-bold ms-3">Pesananmu</h5>
+            <div class="modal-dialog modal-fullscreen-sm-down m-0 h-100">
+                <div class="modal-content border-0 d-flex flex-column" style="background-color: #F8F9FA; border-radius: 0; height: 100vh; max-height: 100vh;">
+                    <div class="cart-header-curve" style="flex-shrink: 0;">
+                        <button type="button" class="btn btn-light rounded-circle" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; z-index: 10;" data-bs-dismiss="modal">
+                            <i class="fas fa-arrow-left text-danger"></i>
+                        </button>
+                        <div class="ms-3 z-3">
+                            <div style="font-weight: 800; font-size: 1.4rem; font-style: italic;">Real-Vibe</div>
+                            <h4 class="fw-bold m-0">Pesananmu</h4>
+                        </div>
                     </div>
-                    <div class="modal-body p-3">
-                        @php $total_bayar = 0; @endphp
-                        @if(empty($cart))
-                            <div class="text-center py-5"><p class="text-muted">Belum ada pesanan.</p></div>
-                        @else
-                            @foreach($cart as $index => $item)
-                            @php 
-                                $harga_clean = (int)str_replace(['.', ',00'], '', $item['harga'] ?? '0');
-                                $subtotal = $harga_clean * ($item['qty'] ?? 0);
-                                $total_bayar += $subtotal;
-                            @endphp
-                            <div class="card cart-item-card">
-                                <div class="d-flex align-items-center">
-                                    <img src="{{ asset($item['img'] ?? '') }}" style="width: 50px; height: 50px; border-radius: 10px; object-fit: cover;" onerror="this.src='https://via.placeholder.com/60'">
-                                    <div class="ms-3 flex-grow-1">
-                                        <div class="fw-bold small">{{ $item['nama'] ?? 'Menu' }}</div>
-                                        <div class="text-danger fw-bold small">Rp {{ $item['harga'] ?? '0' }}</div>
-                                    </div>
-                                    <div class="qty-control">
-                                        <form action="{{ route('update.cart') }}" method="POST" class="m-0">@csrf<input type="hidden" name="index" value="{{ $index }}"><button name="operasi" value="kurang" class="btn-qty">-</button></form>
-                                        <span class="small fw-bold mx-2">{{ $item['qty'] }}</span>
-                                        <form action="{{ route('update.cart') }}" method="POST" class="m-0">@csrf<input type="hidden" name="index" value="{{ $index }}"><button name="operasi" value="tambah" class="btn-qty">+</button></form>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                            <div class="mt-4 px-2">
-                                <div class="d-flex justify-content-between small mb-1"><span>Total Item</span><span>Rp {{ number_format($total_bayar, 0, ',', '.') }},00</span></div>
-                                <div class="d-flex justify-content-between small mb-3"><span>Biaya Admin</span><span class="text-success">Free</span></div>
-                                <div class="d-flex justify-content-between align-items-center border-top pt-3">
-                                    <h6 class="fw-bold">Total Biaya</h6>
-                                    <h5 class="fw-bold text-danger">Rp {{ number_format($total_bayar, 0, ',', '.') }},00</h5>
-                                </div>
-                                <button class="btn btn-danger w-100 py-3 mt-3 fw-bold" style="border-radius: 15px;" data-bs-toggle="modal" data-bs-target="#checkoutModal">KONFIRMASI PESANAN</button>
-                            </div>
-                        @endif
-                    </div>
+                    <div id="cartItemsBody" class="p-3" style="flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;"></div>
+                    
+                    <div id="cartFooter" class="p-4" style="flex-shrink: 0; background: white; border-top-left-radius: 30px; border-top-right-radius: 30px; box-shadow: 0 -10px 20px rgba(0,0,0,0.05);"></div>
                 </div>
             </div>
         </div>
@@ -628,14 +533,15 @@
                         <label class="form-label-small mb-2">Pesanan Saya</label>
                         <div class="checkout-summary-box summary-card-gray mb-3">
                             <img src="https://cdn-icons-png.flaticon.com/512/2276/2276931.png" style="width: 50px;" class="me-3">
-                            <div><h5 class="fw-bold mb-0">Rp {{ number_format($total_bayar, 0, ',', '.') }},00</h5><small class="text-muted">Total Bayar</small></div>
+                            <div><h5 class="fw-bold mb-0">Rp <span id="checkoutTotal">0</span>,00</h5><small class="text-muted">Total Bayar</small></div>
                         </div>
-                        <div class="mb-3"><label class="form-label-small">Catatan Pesanan</label><input type="text" class="form-control input-gray-custom" placeholder="Contoh: Pedas ya..."></div>
-                        <div class="mb-3"><label class="form-label-small">Nama Pemesan</label><input type="text" class="form-control input-gray-custom" placeholder="Masukkan nama Anda"></div>
+                        <div id="checkoutItemsList" class="mb-3" style="font-size: 0.85rem;"></div>
+                        <div class="mb-3"><label class="form-label-small">Catatan Pesanan</label><input id="inputCatatan" type="text" class="form-control input-gray-custom" placeholder="Contoh: Pedas ya..."></div>
+                        <div class="mb-3"><label class="form-label-small">Nama Pemesan</label><input id="inputNamaPemesan" type="text" class="form-control input-gray-custom" placeholder="Masukkan nama Anda"></div>
                         <label class="form-label-small mb-2">Metode Pembayaran</label>
                         <div class="d-flex gap-3 mb-4">
-                            <div class="payment-option active" onclick="selectPayment(this)"><i class="fas fa-money-bill-wave d-block mb-1"></i><small>TUNAI</small></div>
-                            <div class="payment-option" onclick="selectPayment(this)"><i class="fas fa-qrcode d-block mb-1"></i><small>QRIS</small></div>
+                            <div class="payment-option active" data-metode="tunai" onclick="selectPayment(this)"><i class="fas fa-money-bill-wave d-block mb-1"></i><small>TUNAI</small></div>
+                            <div class="payment-option" data-metode="qris" onclick="selectPayment(this)"><i class="fas fa-qrcode d-block mb-1"></i><small>QRIS</small></div>
                         </div>
                         <button class="btn btn-danger w-100 py-3 fw-bold" style="border-radius: 15px; background-color: var(--brand-orange);" id="btn-submit-order">PESAN SEKARANG</button>
                     </div>
@@ -643,43 +549,85 @@
             </div>
         </div>
 
-        <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content text-center modal-success-content">
-                    <div class="modal-body p-5">
-                        <div class="success-maskot-container">
-                            <img src="{{ asset('/images/maskot_realvibe.png') }}" style="width: 150px;" onerror="this.src='https://via.placeholder.com/150?text=Maskot'">
-                        </div>
-                        <h4 class="fw-bold mt-3">Terimakasih !</h4>
-                        <p class="text-muted small">Pesanan Anda berhasil dibuat. Silakan lakukan pembayaran di kasir dan berikan penilaian Anda.</p>
-                        <button class="btn btn-danger px-5 py-2 mt-3 fw-bold" style="border-radius: 10px; background-color: #801a1a;" onclick="location.reload()">Oke</button>
+        {{-- LAYAR PESANANMU (full-screen setelah checkout) --}}
+        <div id="pesananmuScreen" style="display:none; position:fixed; inset:0; z-index:9999; background:#F8F9FA; overflow-y:auto; -webkit-overflow-scrolling:touch;">
+            <div style="background: #8B1A1A; padding: 50px 25px 30px; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; color: white; text-align: center;">
+                <div style="font-weight:800; font-size:1.2rem; font-style:italic;">Real-Vibe</div>
+                <h4 class="fw-bold">Pesananmu</h4>
+            </div>
+            <div style="max-width: 420px; margin: -20px auto 0; padding: 0 20px 100px;">
+                <div style="background: white; border-radius: 20px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); text-align: center;">
+                    <div id="pesananQrBox" style="width: 140px; height: 140px; margin: 0 auto 10px; border: 3px solid #333; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #999;">
+                        <canvas id="pesananQrCanvas"></canvas>
                     </div>
+                    <h5 id="pesananNomorAntrian" class="fw-bold" style="color: #2D1A1A;"></h5>
+                    <div class="d-flex justify-content-between align-items-center mt-3 mb-2 px-2">
+                        <span id="pesananMetodeLabel" class="fw-bold" style="color: #2D1A1A;"></span>
+                        <span id="pesananTotalLabel" class="fw-bold" style="color: #2D1A1A; font-size: 1.2rem;"></span>
+                    </div>
+                </div>
+
+                <div style="background: white; border-radius: 20px; padding: 20px; margin-top: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.08);">
+                    <h6 class="fw-bold" style="color: #2D1A1A;">Pesanan</h6>
+                    <div id="pesananRincianItems"></div>
+                    <hr>
+                    <div id="pesananCatatanBox" style="display:none;">
+                        <h6 class="fw-bold" style="color: #2D1A1A;">Catatan</h6>
+                        <p id="pesananCatatanText" class="text-muted small"></p>
+                    </div>
+                    <h6 class="fw-bold" style="color: #2D1A1A;">Detail Pembayaran</h6>
+                    <div class="d-flex justify-content-between"><span class="text-muted">Subtotal</span><span id="pesananSubtotal"></span></div>
+                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Biaya layanan & lainnya</span><span>-</span></div>
+                    <div class="d-flex justify-content-between fw-bold" style="font-size:1.1rem;"><span>Total Pembayaran</span><span id="pesananGrandTotal"></span></div>
+                </div>
+
+                <div id="pesananStatusBox" style="background: white; border-radius: 20px; padding: 20px; margin-top: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); text-align: center;">
+                    <div class="spinner-border text-danger mb-2" role="status" style="width: 2rem; height: 2rem;"></div>
+                    <p class="fw-bold mb-0" style="color: #2D1A1A;">Menunggu konfirmasi kasir...</p>
+                    <p class="text-muted small mb-0">Sisa waktu: <span id="pesananCountdown" class="fw-bold text-danger">30:00</span></p>
                 </div>
             </div>
         </div>
 
+        {{-- SweetAlert2 digunakan untuk popup diterima/ditolak (tidak perlu HTML modal) --}}
+
         <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <button type="button" class="btn-close z-3 position-absolute top-0 end-0 m-3 btn-close-white" data-bs-dismiss="modal"></button>
-                    <div class="modal-detail-top">
-                        <img id="gambarDetail" src="" alt="Food">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
+                <div class="modal-content border-0" style="border-radius: 30px; overflow: hidden; background: #FAFAFA;">
+                    <div style="position: relative; background: #962519; height: 200px; border-bottom-left-radius: 50%; border-bottom-right-radius: 50%; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 20px;">
+                        <button type="button" class="btn btn-light rounded-circle position-absolute" style="top: 20px; left: 20px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;" data-bs-dismiss="modal">
+                            <i class="fas fa-arrow-left text-danger"></i>
+                        </button>
+                        <div class="position-absolute" style="top: 20px; right: 20px; color: white;">
+                            <i class="fas fa-shopping-cart fa-lg"></i>
+                        </div>
+                        <img id="gambarDetail" src="" style="width: 180px; height: 180px; object-fit: contain; position: absolute; bottom: -40px; drop-shadow: 0 10px 15px rgba(0,0,0,0.2);" onerror="this.src='https://via.placeholder.com/150'">
                     </div>
-                    <div class="modal-detail-body">
-                        <div class="detail-title-row text-start">
-                            <div>
-                                <h2 id="namaDetail" class="detail-name-label"></h2>
-                                <p id="subDetail" class="detail-sub-label"></p>
-                            </div>
-                            <div class="text-end">
-                                <p class="detail-price-label">Rp <span id="hargaDetail"></span>,00</p>
-                            </div>
+                    
+                    <div class="px-4" style="margin-top: 60px;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h4 id="namaDetail" class="fw-bold m-0" style="color: #2D1A1A;"></h4>
+                            <h5 class="fw-bold m-0" style="color: #962519;">Rp <span id="hargaDetail"></span></h5>
                         </div>
-                        <div class="text-start">
-                            <div class="btn-deskripsi-tag">Deskripsi</div>
-                            <p id="deskripsiDetail"></p>
+                        <p id="subDetail" class="text-muted small fw-bold mb-3"></p>
+                        
+                        <div class="d-inline-block px-3 py-1 mb-3" style="background: #D3432F; color: white; border-radius: 20px; font-size: 0.8rem; font-weight: bold;">
+                            Deskripsi
                         </div>
-                        <button class="btn btn-detail-tutup w-100" data-bs-dismiss="modal">Tutup</button>
+                        
+                        <p id="deskripsiDetail" class="text-muted small" style="line-height: 1.6; text-align: justify;">
+                            Belum ada deskripsi untuk menu ini.
+                        </p>
+                        
+                        <div class="d-flex justify-content-center align-items-center mt-4 mb-4 gap-4">
+                            <button class="btn btn-light rounded-circle fw-bold" style="width: 40px; height: 40px; color: #962519;" onclick="updateDetailQty(-1)">-</button>
+                            <span id="detailQty" class="fw-bold fs-5">1</span>
+                            <button class="btn btn-light rounded-circle fw-bold" style="width: 40px; height: 40px; color: #962519;" onclick="updateDetailQty(1)">+</button>
+                        </div>
+                        
+                        <button class="btn w-100 py-3 mb-4 fw-bold text-white" style="border-radius: 15px; background: #C42F1A;" onclick="addDetailToCart()">
+                            Masukkan keranjang
+                        </button>
                     </div>
                 </div>
             </div>
@@ -695,7 +643,280 @@
         <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
         
         <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        // ========== DATA ==========
+        const ALL_MENUS = @json($menus ?? []);
+        const ALL_KATEGORIS = @json($kategori_list ?? []);
+        const ICON_MAP = {
+            'snack':   '{{ asset('images/icons/nachos-color.svg') }}',
+            'makanan': '{{ asset('images/icons/rice-bowl-color.svg') }}',
+            'minuman': '{{ asset('images/icons/boba-drink-color.svg') }}',
+            'camilan': '{{ asset('images/icons/cake-slice-color.svg') }}',
+            'dessert': '{{ asset('images/icons/cake-slice-color.svg') }}',
+        };
+        const API_IMAGE_BASE = '{{ url('api/image') }}';
+        let activeKategori = '';
+        let searchQuery = '';
+
+        // ========== CART (sessionStorage) ==========
+        function getCart() {
+            try { return JSON.parse(sessionStorage.getItem('rv_cart') || '[]'); } catch(e) { return []; }
+        }
+        function saveCart(cart) {
+            sessionStorage.setItem('rv_cart', JSON.stringify(cart));
+            updateCartBadge();
+        }
+        function updateCartBadge() {
+            const cart = getCart();
+            const total = cart.reduce((s, i) => s + i.qty, 0);
+            document.getElementById('cart-badge').innerText = total;
+        }
+        function addToCart(nama, harga, img, qty = 1) {
+            let cart = getCart();
+            const idx = cart.findIndex(i => i.nama === nama);
+            if (idx >= 0) { cart[idx].qty += qty; } else { cart.push({ nama, harga: parseFloat(harga), img, qty }); }
+            saveCart(cart);
+        }
+        function updateCartItemQty(index, delta) {
+            let cart = getCart();
+            if (!cart[index]) return;
+            cart[index].qty += delta;
+            if (cart[index].qty < 1) cart.splice(index, 1);
+            saveCart(cart);
+            renderCartModal();
+        }
+
+        // ========== FORMAT ==========
+        function formatRp(val) { return new Intl.NumberFormat('id-ID').format(Math.round(val)); }
+
+        // ========== KATEGORI & MENU RENDER ==========
+        function setKategori(cat) {
+            activeKategori = cat;
+            searchQuery = '';
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) searchInput.value = '';
+            renderKategoriButtons();
+            renderMenuGrid();
+            const promoSection = document.getElementById('promoCarouselSection');
+            if (promoSection) promoSection.style.display = '';
+        }
+
+        function renderKategoriButtons() {
+            const container = document.getElementById('kategoriContainer');
+            if (!container) return;
+            container.innerHTML = ALL_KATEGORIS.map(k => {
+                const cat = k.nama_kategori.trim().toLowerCase();
+                const isActive = activeKategori === cat;
+                const icon = ICON_MAP[cat] || ICON_MAP['makanan'];
+                return `<div onclick="setKategori('${cat}')" style="cursor:pointer" class="text-decoration-none">
+                    <div class="category-card d-flex flex-column align-items-center ${isActive ? 'active' : ''}">
+                        <div class="category-icon-wrapper mb-2"><img src="${icon}" alt="${cat}" class="waaaw-icon"></div>
+                        <span class="category-name">${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderMenuGrid() {
+            const grid = document.getElementById('menuGrid');
+            const title = document.getElementById('menuTitle');
+            const teratasSec = document.getElementById('menuTeratasSection');
+            if (!grid) return;
+
+            let filtered;
+            if (searchQuery) {
+                filtered = ALL_MENUS.filter(m => m.nama_menu.toLowerCase().includes(searchQuery));
+                if (title) title.textContent = `Hasil pencarian: '${searchQuery}'`;
+                const promoSection = document.getElementById('promoCarouselSection');
+                if (promoSection) promoSection.style.display = 'none';
+                if (teratasSec) teratasSec.style.display = 'none';
+            } else {
+                if (activeKategori === 'all') {
+                    filtered = ALL_MENUS;
+                    if (title) title.textContent = 'Semua Menu';
+                } else {
+                    filtered = ALL_MENUS.filter(m => (m.kategori || '').trim().toLowerCase() === activeKategori);
+                    if (title) title.textContent = `Menu ${activeKategori.charAt(0).toUpperCase() + activeKategori.slice(1)}`;
+                }
+                if (teratasSec) teratasSec.style.display = activeKategori === 'all' ? 'block' : 'none';
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center text-muted py-5">Menu tidak ditemukan :(</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(m => {
+                const imgUrl = API_IMAGE_BASE + '/' + m.gambar;
+                const hargaFormatted = formatRp(m.harga);
+                return `<div class="col-6">
+                    <div class="card menu-card" onclick="openDetail('${m.nama_menu.replace(/'/g, "\\'")}', ${m.harga}, '${imgUrl}', 'Stok: ${m.stok}', '${m.stok}')">
+                        <img src="${imgUrl}" class="mx-auto mt-2" onerror="this.src='https://via.placeholder.com/150'">
+                        <div class="card-body p-2 mt-2">
+                            <div class="fw-bold small">${m.nama_menu}</div>
+                            <div class="text-muted mb-2" style="font-size: 0.6rem;">Stok: ${m.stok}</div>
+                            <div class="text-danger fw-bold mb-2">Rp ${hargaFormatted}</div>
+                            <button class="btn btn-tambah py-1" onclick="event.stopPropagation(); quickAdd(this, '${m.nama_menu.replace(/'/g, "\\'") }', ${m.harga}, '${imgUrl}')">+ Tambah</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderMenuTeratas() {
+            const container = document.getElementById('menuTeratasContainer');
+            if (!container) return;
+            // Ambil maksimal 5 menu dengan jumlah terjual terbanyak
+            const topMenus = [...ALL_MENUS].sort((a, b) => (b.total_terjual || 0) - (a.total_terjual || 0)).slice(0, 5); 
+            
+            container.innerHTML = topMenus.map(m => {
+                const imgUrl = API_IMAGE_BASE + '/' + m.gambar;
+                const hargaFormatted = formatRp(m.harga);
+                return `<div class="card shadow-sm" style="min-width: 155px; border-radius: 18px; border: none; cursor:pointer;" onclick="openDetail('${m.nama_menu.replace(/'/g, "\\'")}', ${m.harga}, '${imgUrl}', 'Stok: ${m.stok}', '${m.stok}')">
+                    <div style="padding: 10px;">
+                        <img src="${imgUrl}" style="width: 135px; height: 135px; object-fit: cover; border-radius: 12px;" class="mx-auto d-block" onerror="this.src='https://via.placeholder.com/135'">
+                    </div>
+                    <div class="card-body p-2 pt-0 d-flex flex-column text-center">
+                        <div class="fw-bold" style="font-size: 0.95rem; color: #3A231C; text-align: left;">${m.nama_menu}</div>
+                        <div class="text-muted mb-2" style="font-size: 0.65rem; text-align: left;">Stok: ${m.stok} Tersedia</div>
+                        <div class="fw-bold mb-3" style="color: #E27F00; font-size: 0.9rem; text-align: left;">Rp. ${hargaFormatted},00</div>
+                        <button class="btn btn-tambah w-100 py-1" style="font-size: 0.85rem; border-radius: 20px; background: #C42F1A; color: white;" onclick="event.stopPropagation(); quickAdd(this, '${m.nama_menu.replace(/'/g, "\\'")}', ${m.harga}, '${imgUrl}')">+ Tambah</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function quickAdd(btn, nama, harga, img) {
+            addToCart(nama, harga, img, 1);
+            btn.innerHTML = '✓ Berhasil';
+            btn.classList.replace('btn-tambah', 'btn-success');
+            setTimeout(() => { btn.innerHTML = '+ Tambah'; btn.classList.replace('btn-success', 'btn-tambah'); }, 800);
+        }
+
+        // ========== CART MODAL ==========
+        function openCartModal() {
+            renderCartModal();
+            var modal = new bootstrap.Modal(document.getElementById('cartModal'));
+            modal.show();
+        }
+
+        function renderCartModal() {
+            const cart = getCart();
+            const body = document.getElementById('cartItemsBody');
+            const footer = document.getElementById('cartFooter');
+            
+            if (cart.length === 0) {
+                body.innerHTML = `<div class="text-center d-flex flex-column align-items-center justify-content-center" style="height: 100%;">
+                    <div style="width: 120px; height: 120px; background-color: #D3D3D3; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                        <i class="fas fa-cart-arrow-down fa-4x text-white"></i>
+                    </div>
+                    <h4 class="fw-bold" style="color: #A9A9A9;">Keranjang Kosong</h4>
+                    <p class="small" style="color: #A9A9A9;">Silakan pilih menu untuk mulai memesan!</p>
+                </div>`;
+            } else {
+                body.innerHTML = '<div style="padding: 0 10px;">' + cart.map((item, idx) => {
+                    const harga = Math.round(item.harga);
+                    return `<div class="card cart-item-card">
+                        <div class="d-flex align-items-center">
+                            <img src="${item.img}" onerror="this.src='https://via.placeholder.com/60'">
+                            <div class="ms-3 flex-grow-1">
+                                <div class="fw-bold" style="color: #4A2511;">${item.nama}</div>
+                                <div class="small text-muted mb-1">Pilihan Menu</div>
+                                <div class="fw-bold" style="color: #D3432F; font-size: 0.85rem;">Rp ${formatRp(harga)},00</div>
+                            </div>
+                            <div class="qty-control">
+                                <button class="btn-qty" onclick="updateCartItemQty(${idx}, -1)">-</button>
+                                <span class="fw-bold" style="font-size: 1.1rem; color: #2D1A1A;">${item.qty}</span>
+                                <button class="btn-qty" onclick="updateCartItemQty(${idx}, 1)">+</button>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('') + '</div>';
+            }
+
+            const total = cart.reduce((s, i) => s + Math.round(i.harga) * i.qty, 0);
+            footer.innerHTML = `
+                <div class="d-flex justify-content-between mb-2 px-2 text-muted" style="font-size: 1.1rem;">
+                    <span>Total Item</span>
+                    <span style="color: #2D1A1A;">Rp.${formatRp(total)},00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-4 px-2 text-muted" style="font-size: 1.1rem;">
+                    <span>Biaya Admin</span>
+                    <span style="color: #4A4A4A;">Free</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+                    <h5 class="fw-bold m-0" style="color: #4A4A4A;">Total Biaya</h5>
+                    <h5 class="fw-bold m-0" style="color: #4A4A4A;">Rp.${formatRp(total)},00</h5>
+                </div>
+                <button class="btn w-100 py-3 fw-bold text-white text-uppercase" style="border-radius: 20px; background: #C42F1A; font-size: 1.1rem;" onclick="konfirmasiPesanan()" ${cart.length === 0 ? 'disabled' : ''}>
+                    KONFIRMASI PESANAN
+                </button>`;
+        }
+
+        function konfirmasiPesanan() {
+            const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
+            if (cartModal) cartModal.hide();
+            
+            const cart = getCart();
+            const total = cart.reduce((s, i) => s + Math.round(i.harga) * i.qty, 0);
+            document.getElementById('checkoutTotal').innerText = formatRp(total);
+
+            // Populate item list in checkout modal
+            const listEl = document.getElementById('checkoutItemsList');
+            listEl.innerHTML = cart.map(i => `<div class="d-flex justify-content-between"><span>${i.qty}x ${i.nama}</span><span>Rp ${formatRp(Math.round(i.harga) * i.qty)}</span></div>`).join('');
+
+            // Reset inputs
+            document.getElementById('inputCatatan').value = '';
+            document.getElementById('inputNamaPemesan').value = '';
+
+            setTimeout(() => {
+                var checkoutModal = new bootstrap.Modal(document.getElementById('checkoutModal'));
+                checkoutModal.show();
+            }, 300);
+        }
+
+        // ========== DETAIL MODAL ==========
+        let currentDetailMenu = {};
+        function openDetail(nama, harga, img, deskripsi, sub) {
+            document.getElementById('namaDetail').innerText = nama;
+            document.getElementById('subDetail').innerText = sub;
+            document.getElementById('hargaDetail').innerText = formatRp(harga);
+            document.getElementById('gambarDetail').src = img;
+            document.getElementById('deskripsiDetail').innerText = deskripsi && deskripsi.trim() !== '' ? deskripsi : 'Belum ada deskripsi untuk menu ini.';
+            document.getElementById('detailQty').innerText = '1';
+            currentDetailMenu = { nama, harga, img };
+            var myModal = new bootstrap.Modal(document.getElementById('detailModal'));
+            myModal.show();
+        }
+
+        function updateDetailQty(change) {
+            let qty = parseInt(document.getElementById('detailQty').innerText);
+            qty += change;
+            if (qty < 1) qty = 1;
+            document.getElementById('detailQty').innerText = qty;
+        }
+
+        function addDetailToCart() {
+            let qty = parseInt(document.getElementById('detailQty').innerText);
+            if (!currentDetailMenu.nama) return;
+            const btn = document.querySelector('#detailModal .btn.w-100');
+            const originalText = btn.innerText;
+            btn.innerText = 'Memproses...';
+            btn.disabled = true;
+
+            addToCart(currentDetailMenu.nama, currentDetailMenu.harga, currentDetailMenu.img, qty);
+
+            btn.innerText = '✓ Berhasil Ditambahkan';
+            btn.style.background = '#28a745';
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.background = '#C42F1A';
+                btn.disabled = false;
+                bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
+            }, 800);
+        }
+
+        // ========== ONBOARDING & INIT ==========
+        document.addEventListener('DOMContentLoaded', function() {
             const screen = document.getElementById('onboarding-screen');
             const isAppOpen = sessionStorage.getItem('app_session_active');
             if (!isAppOpen) { screen.style.display = 'block'; } else { screen.style.display = 'none'; }
@@ -703,18 +924,40 @@
             var promoCarousel = document.getElementById('promoCarousel');
             if (promoCarousel) {
                 var carousel = new bootstrap.Carousel(promoCarousel, { interval: 3000, ride: 'carousel' });
-                carousel.cycle(); 
+                carousel.cycle();
             }
 
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('search')) {
-                const input = document.getElementsByName('search')[0];
-                if(input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+            // Init kategori
+            if (ALL_KATEGORIS.length > 0) {
+                activeKategori = ALL_KATEGORIS[0].nama_kategori.trim().toLowerCase();
+            }
+            renderKategoriButtons();
+            renderMenuTeratas();
+            renderMenuGrid();
+            updateCartBadge();
+
+            // Live search
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                let debounce;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(debounce);
+                    debounce = setTimeout(() => {
+                        searchQuery = this.value.trim().toLowerCase();
+                        if (searchQuery === '') {
+                            renderMenuGrid();
+                            const promoSection = document.getElementById('promoCarouselSection');
+                            if (promoSection) promoSection.style.display = '';
+                        } else {
+                            renderMenuGrid();
+                        }
+                    }, 300);
+                });
             }
         });
 
-        const swiper = new Swiper(".mySwiper", {
-            pagination: { el: ".swiper-pagination", clickable: true },
+        const swiper = new Swiper('.mySwiper', {
+            pagination: { el: '.swiper-pagination', clickable: true },
             speed: 800, autoplay: { delay: 3000, disableOnInteraction: false },
             on: {
                 slideChange: function () {
@@ -723,7 +966,7 @@
                     if (this.activeIndex === 2) {
                         navGroup.style.display = 'none';
                         if(startBtn) startBtn.style.display = 'block';
-                        this.autoplay.stop(); 
+                        this.autoplay.stop();
                     } else {
                         navGroup.style.display = 'flex';
                         if(startBtn) startBtn.style.display = 'none';
@@ -740,44 +983,172 @@
             setTimeout(() => { screen.style.display = 'none'; }, 800);
         }
 
-        function openDetail(nama, harga, img, deskripsi, sub) {
-            document.getElementById('namaDetail').innerText = nama;
-            document.getElementById('subDetail').innerText = sub;
-            document.getElementById('hargaDetail').innerText = harga;
-            document.getElementById('gambarDetail').src = img;
-            document.getElementById('deskripsiDetail').innerText = deskripsi;
-            var myModal = new bootstrap.Modal(document.getElementById('detailModal'));
-            myModal.show();
-        }
+        // ========== CHECKOUT & PESANANMU ==========
+        let activePesananId = null;
+        let pollingInterval = null;
+        let countdownInterval = null;
+        let pesananDeadline = null;
 
-        document.querySelectorAll('.btn-beli').forEach(button => {
-            button.addEventListener('click', function() {
-                const nama = this.getAttribute('data-nama');
-                const harga = this.getAttribute('data-harga');
-                const img = this.closest('.menu-card').querySelector('img').getAttribute('src'); 
-                const formData = new FormData();
-                formData.append('nama', nama); formData.append('harga', harga); formData.append('img', img);
+        const btnSubmitOrder = document.getElementById('btn-submit-order');
+        if (btnSubmitOrder) {
+            btnSubmitOrder.addEventListener('click', function() {
+                const nama = document.getElementById('inputNamaPemesan').value.trim();
+                if (!nama) { Swal.fire({ icon: 'warning', title: 'Oops!', text: 'Nama pemesan wajib diisi!', confirmButtonColor: '#C42F1A' }); return; }
+
+                const cart = getCart();
+                if (cart.length === 0) return;
+
+                const metode = document.querySelector('.payment-option.active')?.getAttribute('data-metode') || 'tunai';
+                const catatan = document.getElementById('inputCatatan').value.trim();
                 const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-                fetch('/add-to-cart', { method: 'POST', body: formData, headers: { 'X-CSRF-TOKEN': token } })
+                this.disabled = true;
+                this.innerText = 'Memproses...';
+
+                fetch('/api/checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        nama_pemesan: nama,
+                        metode_pembayaran: metode,
+                        catatan: catatan || null,
+                        items: cart.map(i => ({ nama: i.nama, harga: i.harga, qty: i.qty }))
+                    })
+                })
                 .then(res => res.json())
                 .then(data => {
-                    document.getElementById('cart-badge').innerText = data.total_item;
-                    this.innerHTML = "✓ Berhasil";
-                    this.classList.replace('btn-tambah', 'btn-success');
-                    setTimeout(() => { this.innerHTML = "+ Tambah"; this.classList.replace('btn-success', 'btn-tambah'); }, 800);
+                    this.disabled = false;
+                    this.innerText = 'PESAN SEKARANG';
+
+                    if (!data.success) {
+                        Swal.fire({ icon: 'error', title: 'Gagal!', text: data.message || 'Gagal membuat pesanan.', confirmButtonColor: '#C42F1A' });
+                        return;
+                    }
+
+                    // Close checkout modal
+                    const checkoutModal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+                    if (checkoutModal) checkoutModal.hide();
+
+                    // Clear cart
+                    sessionStorage.removeItem('rv_cart');
+                    updateCartBadge();
+
+                    // Show Pesananmu screen
+                    showPesananmuScreen(data, cart, nama, metode, catatan);
+                })
+                .catch(err => {
+                    console.error(err);
+                    this.disabled = false;
+                    this.innerText = 'PESAN SEKARANG';
+                    Swal.fire({ icon: 'error', title: 'Error!', text: 'Terjadi kesalahan jaringan.', confirmButtonColor: '#C42F1A' });
                 });
             });
-        });
+        }
 
-        document.getElementById('btn-submit-order').addEventListener('click', function() {
-            const checkoutModal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
-            if(checkoutModal) checkoutModal.hide();
-            setTimeout(() => {
-                const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-                successModal.show();
-            }, 500);
-        });
+        function showPesananmuScreen(data, cart, nama, metode, catatan) {
+            activePesananId = data.pesanan_id;
+            pesananDeadline = new Date(data.waktu_batas);
+
+            document.getElementById('pesananNomorAntrian').innerText = data.nomor_antrian;
+            document.getElementById('pesananMetodeLabel').innerText = metode === 'qris' ? 'QRIS' : 'Tunai';
+            document.getElementById('pesananTotalLabel').innerText = 'Rp ' + formatRp(data.total_bayar) + ',00';
+            document.getElementById('pesananSubtotal').innerText = 'Rp ' + formatRp(data.total_bayar) + ',00';
+            document.getElementById('pesananGrandTotal').innerText = 'Rp ' + formatRp(data.total_bayar) + ',00';
+
+            // QR code - simple text-based QR placeholder
+            const qrCanvas = document.getElementById('pesananQrCanvas');
+            const qrBox = document.getElementById('pesananQrBox');
+            qrBox.innerHTML = '<div style="font-size:2.5rem; font-weight:900; color:#2D1A1A;">' + data.nomor_antrian + '</div><div style="font-size:0.7rem; color:#999;">Tunjukkan ke kasir</div>';
+
+            // Items list
+            document.getElementById('pesananRincianItems').innerHTML = cart.map(i => 
+                `<div class="d-flex justify-content-between mb-1"><span>${i.nama}</span><span class="text-muted">${i.qty}</span></div>`
+            ).join('');
+
+            // Catatan
+            if (catatan) {
+                document.getElementById('pesananCatatanBox').style.display = 'block';
+                document.getElementById('pesananCatatanText').innerText = catatan;
+            } else {
+                document.getElementById('pesananCatatanBox').style.display = 'none';
+            }
+
+            // Show screen
+            document.getElementById('pesananmuScreen').style.display = 'block';
+
+            // Start countdown
+            startCountdown();
+
+            // Start polling
+            startPolling();
+        }
+
+        function startCountdown() {
+            if (countdownInterval) clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                const now = new Date();
+                const diff = Math.max(0, Math.floor((pesananDeadline - now) / 1000));
+                const mins = Math.floor(diff / 60).toString().padStart(2, '0');
+                const secs = (diff % 60).toString().padStart(2, '0');
+                document.getElementById('pesananCountdown').innerText = mins + ':' + secs;
+
+                if (diff <= 0) {
+                    clearInterval(countdownInterval);
+                    stopPolling();
+                    closePesananmuScreen();
+                }
+            }, 1000);
+        }
+
+        function startPolling() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(() => {
+                if (!activePesananId) return;
+                fetch('/api/checkout/status/' + activePesananId)
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.status === 'diproses') {
+                            stopPolling();
+                            clearInterval(countdownInterval);
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Pesanan Diterima! 🎉',
+                                html: '<p style="color:#666;">Pesananmu sedang dimasak, tunggu beberapa menit kemudian pesananmu akan datang.<br><br><strong>Terima kasih sudah memesan!</strong></p>',
+                                confirmButtonText: 'OK, Mengerti!',
+                                confirmButtonColor: '#28a745',
+                                allowOutsideClick: false
+                            }).then(() => {
+                                document.getElementById('pesananStatusBox').innerHTML = '<div style="color: #28a745;"><i class="fas fa-check-circle fa-2x mb-2"></i><p class="fw-bold mb-0">Pesanan sedang dimasak!</p><p class="text-muted small">Silakan tunggu dan lakukan pembayaran di kasir.</p></div>';
+                            });
+                        } else if (d.status === 'batal') {
+                            stopPolling();
+                            clearInterval(countdownInterval);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Pesanan Dibatalkan 😔',
+                                html: '<p style="color:#666;">Mohon maaf pesananmu dibatalkan.<br>Silahkan pilih menu lagi sesuai yang kamu inginkan.</p>',
+                                confirmButtonText: 'OK, Kembali ke Menu',
+                                confirmButtonColor: '#dc3545',
+                                allowOutsideClick: false
+                            }).then(() => {
+                                closePesananmuScreen();
+                                window.location.href = '/?page=menu';
+                            });
+                        }
+                    }).catch(() => {});
+            }, 3000);
+        }
+
+        function stopPolling() {
+            if (pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
+        }
+
+        function closePesananmuScreen() {
+            document.getElementById('pesananmuScreen').style.display = 'none';
+            activePesananId = null;
+        }
+
+        // closePesananDiterima & closePesananDitolak now handled by SweetAlert2 .then() callbacks above
 
         function selectPayment(el) {
             document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('active'));
