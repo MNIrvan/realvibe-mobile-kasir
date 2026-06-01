@@ -138,6 +138,87 @@ class CashierSessionController extends Controller
         ], 201);
     }
 
+    public function updateEntry(Request $request, int $sessionId, int $entryId)
+    {
+        $session = CashierSession::where('id', $sessionId)->where('status', 'open')->first();
+        if (!$session) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Sesi kasir tidak ditemukan atau sudah ditutup',
+            ], 404);
+        }
+
+        $entry = CashierSessionEntry::where('cashier_session_id', $sessionId)->find($entryId);
+        if (!$entry) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Entry kas tidak ditemukan',
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'entry_type' => 'sometimes|required|in:in,out',
+            'title' => 'sometimes|required|string|max:255',
+            'amount' => 'sometimes|required|numeric|min:0.01',
+            'notes' => 'nullable|string',
+            'happened_at' => 'nullable|date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        DB::transaction(function () use ($request, $entry, $sessionId) {
+            $entry->update($request->only([
+                'entry_type',
+                'title',
+                'amount',
+                'notes',
+                'happened_at',
+            ]));
+            $this->recalculateSessionTotals($sessionId);
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Entry kas berhasil diperbarui',
+            'data' => $entry->fresh(),
+        ]);
+    }
+
+    public function deleteEntry(int $sessionId, int $entryId)
+    {
+        $session = CashierSession::where('id', $sessionId)->where('status', 'open')->first();
+        if (!$session) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Sesi kasir tidak ditemukan atau sudah ditutup',
+            ], 404);
+        }
+
+        $entry = CashierSessionEntry::where('cashier_session_id', $sessionId)->find($entryId);
+        if (!$entry) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Entry kas tidak ditemukan',
+            ], 404);
+        }
+
+        DB::transaction(function () use ($entry, $sessionId) {
+            $entry->delete();
+            $this->recalculateSessionTotals($sessionId);
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Entry kas berhasil dihapus',
+        ]);
+    }
+
     public function close(Request $request, int $sessionId)
     {
         $session = CashierSession::where('id', $sessionId)->where('status', 'open')->first();

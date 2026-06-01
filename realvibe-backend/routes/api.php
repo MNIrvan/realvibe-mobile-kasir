@@ -66,4 +66,6 @@ Route::prefix('cashier-sessions')->group(function () {
     Route::post('/open', [CashierSessionController::class, 'open']);
     Route::post('/{sessionId}/close', [CashierSessionController::class, 'close']);
     Route::post('/{sessionId}/entries', [CashierSessionController::class, 'addEntry']);
+    Route::put('/{sessionId}/entries/{entryId}', [CashierSessionController::class, 'updateEntry']);
+    Route::delete('/{sessionId}/entries/{entryId}', [CashierSessionController::class, 'deleteEntry']);
 });
